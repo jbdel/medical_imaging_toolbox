@@ -8,3 +8,16 @@ JB version. Returns
 
 Report consists of the `findings` section if any, otherwise consists of the `impression` section. If both findings and impression
 are non-existent, the full example is discarded. 
+
+## TODO 
+
+Ideally, all dataloaders should return the same structure, in the same order.
+So far, mine is :
+
+```
+return {'idx': idx,
+        'key': self.keys[idx],
+        'report': report,
+        'img': img,
+        'label': label}
+```
