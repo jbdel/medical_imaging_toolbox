@@ -69,7 +69,7 @@ if __name__ == '__main__':
                  'return_label': args.return_label,
                  'return_report': args.return_report,
                  'task_binary': args.num_classes == 2}
-    
+
     train_dset = eval(args.dataset)('train', **data_args)
     eval_dset = eval(args.dataset)('validate', **data_args)
     test_dset = eval(args.dataset)('test', **data_args)
