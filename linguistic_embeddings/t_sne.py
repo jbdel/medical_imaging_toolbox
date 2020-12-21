@@ -10,7 +10,7 @@ from tqdm import tqdm
 from collections import defaultdict
 
 from .models import get_model
-from dataloaders.MimicDataset import MimicDataset, CLASS_NAMES
+from dataloaders.MimicDataset import MimicDataset
 from linguistic_embeddings.train_doc2vec import EpochLogger
 
 parser = argparse.ArgumentParser()
@@ -29,6 +29,7 @@ model, tokenizer = get_model(args)
 
 for split in ["validate", "test", "train"]:
     dataset = eval(args.dataset)(split, return_report=True, return_label=True)
+    class_names = dataset.get_classes_name()
 
     classes = defaultdict(list)
     study_id_dict = set()
@@ -78,7 +79,7 @@ for split in ["validate", "test", "train"]:
         fig = plt.figure()
         c = []
         for n in it:
-            c.append(CLASS_NAMES[n])
+            c.append(class_names[n])
             plt.scatter(y[n][:, 0], y[n][:, 1], s=1.5, alpha=0.4)
 
         plt.legend(c, markerscale=10, loc='center left', bbox_to_anchor=(1, 0.5))

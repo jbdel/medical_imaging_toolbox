@@ -9,16 +9,13 @@ from tqdm import tqdm
 import torch
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
-
-CLASS_NAMES = ["Atelectasis", "Cardiomegaly", "Consolidation", "Edema", "Enlarged Cardiomediastinum", "Fracture",
-               "Lung Lesion", "Lung Opacity", "No Finding", "Pleural Effusion", "Pleural Other", "Pneumonia",
-               "Pneumothorax", "Support Devices"]
+from tqdm import tqdm
 
 data_root = './data/'
 split_file = 'mimic-cxr-2.0.0-split.csv'
 label_file = 'mimic-cxr-2.0.0-chexpert.csv'
 report_file = 'mimic-crx-reports/mimic_cxr_sectioned.csv'
-image_folder = 'mimic-crx-images/files/'
+image_folder = 'mimic-crx-jpg-images/'
 vector_folder = 'mimic-crx-vectors/'
 
 
@@ -109,10 +106,10 @@ class MimicDataset(Dataset):
                                     'p' + str(subject_id)[:2],  # 10000032 -> p10
                                     'p' + str(subject_id),
                                     's' + str(study_id),
-                                    str(dicom_id) + '_256.npy'
+                                    str(dicom_id) + '.jpeg'
                                     )
             try:
-                img = self.transform(Image.fromarray(np.load(img_path).astype(np.float32)).convert('RGB'))
+                img = self.transform(Image.open(img_path).convert('RGB'))
             except FileNotFoundError:
                 print('image not found for key', self.keys[idx], img_path)
                 raise
@@ -140,10 +137,18 @@ class MimicDataset(Dataset):
     def __len__(self):
         return len(self.keys)
 
-# if self.args.model == 'Doc2Vec' or self.args.model == 'DenseNetAux':
+    def get_classes_name(self):
+        if self.task_binary:
+            return ['No Finding', 'Findings']
+        else:
+            return ["Atelectasis", "Cardiomegaly", "Consolidation", "Edema", "Enlarged Cardiomediastinum", "Fracture",
+                    "Lung Lesion", "Lung Opacity", "No Finding", "Pleural Effusion", "Pleural Other", "Pneumonia",
+                    "Pneumothorax", "Support Devices"]
 
-# vector_path = os.path.join(data_root,
-#                    vector_folder,
-#                    str(subject_id) + '-' + str(study_id) + '.npy'
-#                    )
-#     vector = np.load(vector_path)
+
+if __name__ == '__main__':
+    d = MimicDataset("test", return_image=True,
+                     return_label=True,
+                     return_report=True)
+    for _ in tqdm(d):
+        continue
