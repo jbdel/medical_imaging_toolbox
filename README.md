@@ -1,6 +1,6 @@
 Python3.8
 
-#####linguistic_embedding package
+<p><b>linguistic_embedding package</b></p>
 The linguistic_embedding package 
 (see dedicated [README](https://github.com/jbdel/medical_imaging_toolbox/tree/main/linguistic_embeddings)) is used to compute
 vector representations of a medical dataset reports. So far, one can use [BioclinicalBERT](https://github.com/EmilyAlsentzer/clinicalBERT/), 
@@ -30,7 +30,7 @@ also (see `visualization` command):
 <i>MimicDataset test-set</i>
 
 Above is the results of t-SNE on the six-class variant (`--dataset_task six`) of MimicDataset.
-#####Classifier package
+<p><b>classifier package</b></p>
 
 It is also possible to use the classifier package to run a model on any medical dataset. So far, only CNN are available. Use 
 the following command to train a model:
@@ -66,6 +66,6 @@ python -m classifier.main \
 
 You can also plot and save the vectors of any clssifier in the linguistic_embedding package
 
-#####Dataloader package
+<p><b>dataloaders package</b></p>
 
 So far is available the MimicDataset.
