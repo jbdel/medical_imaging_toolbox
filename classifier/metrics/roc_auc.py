@@ -59,7 +59,7 @@ def plot_roc_multi(fpr, tpr, roc_auc, num_class, args, classes_name):
     plt.title('Receiver operating characteristic')
     plt.legend(loc="lower right")
     plt.savefig(os.path.join(outdir, "plot_roc_multiclass"))
-
+    plt.close()
 
 # Plot of a ROC curve for a specific class
 def plot_roc(fpr, tpr, roc_auc, num_class, args, classes_name):
@@ -80,6 +80,7 @@ def plot_roc(fpr, tpr, roc_auc, num_class, args, classes_name):
     plt.title('Receiver operating characteristic')
     plt.legend(loc="lower right")
     plt.savefig(os.path.join(outdir, "plot_roc_" + str(num_class)))
+    plt.close()
 
 
 # Get roc auc metrics
@@ -87,10 +88,11 @@ def get_roc_auc(y_true, y_pred, args, eval_loader):
     fpr = dict()
     tpr = dict()
     roc_auc = dict()
-    classes_name = eval_loader.dataset.get_classes_name()
+    classes_name = eval_loader.dataset.task_classes
+    num_classes = eval_loader.dataset.num_classes
 
     # Decision function
-    if args.num_classes == 2:
+    if num_classes == 2:
         y_pred = F.softmax(torch.from_numpy(y_pred), dim=-1).numpy()
     else:
         y_pred = torch.sigmoid(torch.from_numpy(y_pred)).numpy()
@@ -99,7 +101,7 @@ def get_roc_auc(y_true, y_pred, args, eval_loader):
     roc_auc["micro"] = roc_auc_score(y_true, y_pred, average='micro')
 
     # Per class auroc
-    for i in range(args.num_classes):
+    for i in range(num_classes):
         fpr[i], tpr[i], _ = roc_curve(y_true[:, i], y_pred[:, i])
         auc_i = auc(fpr[i], tpr[i])
         roc_auc['auc_' + str(i)] = auc_i
@@ -107,6 +109,6 @@ def get_roc_auc(y_true, y_pred, args, eval_loader):
 
     # Plotting all classes
     fpr["micro"], tpr["micro"], _ = roc_curve(y_true.ravel(), y_pred.ravel())
-    plot_roc_multi(fpr, tpr, roc_auc, args.num_classes, args, classes_name)
+    plot_roc_multi(fpr, tpr, roc_auc, num_classes, args, classes_name)
 
     return roc_auc

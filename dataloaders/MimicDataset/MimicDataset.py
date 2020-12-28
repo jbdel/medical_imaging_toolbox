@@ -1,22 +1,20 @@
 from __future__ import print_function
 import os
 import pickle
-import numpy as np
 import sys
-from PIL import Image
-import pandas as pd
-from tqdm import tqdm
 import torch
-from torch.utils.data import Dataset
+from PIL import Image
+import numpy as np
+import pandas as pd
 import torchvision.transforms as transforms
 from tqdm import tqdm
+from .BaseMimic import BaseMimic
 
-data_root = './data/'
+data_root = './data/mimic-crx/'
 split_file = 'mimic-cxr-2.0.0-split.csv'
 label_file = 'mimic-cxr-2.0.0-chexpert.csv'
 report_file = 'mimic-crx-reports/mimic_cxr_sectioned.csv'
 image_folder = 'mimic-crx-jpg-images/'
-vector_folder = 'mimic-crx-vectors/'
 
 
 def get_transforms(name):
@@ -36,19 +34,19 @@ def get_transforms(name):
     ])
 
 
-class MimicDataset(Dataset):
-    def __init__(self, name, return_image=False, return_label=False, return_report=False, task_binary=False):
-        super(MimicDataset, self).__init__()
-        assert name in ['train', 'validate', 'test']
-        self.name = name
+class MimicDataset(BaseMimic):
+    def __init__(self, split, return_image=False, return_label=False, return_report=False, task='all', **kwargs):
+        super(MimicDataset, self).__init__(task)
+        assert split in ['train', 'validate', 'test']
+        self.split = split
         self.return_image = return_image
         self.return_report = return_report
         self.return_label = return_label
-        self.task_binary = task_binary
+        self.task = task
 
         # Open split file
         df_samples = pd.read_csv(os.path.join(data_root, split_file))
-        df_samples = df_samples.loc[df_samples['split'] == name]
+        df_samples = df_samples.loc[df_samples['split'] == split]
         # Open label file
         df_labels = pd.read_csv(os.path.join(data_root, label_file))
         # Open report file
@@ -56,12 +54,12 @@ class MimicDataset(Dataset):
 
         # Building set
         self.samples = {}
-        self.set_file = os.path.join(data_root, name + '_set.pkl')
+        self.set_file = os.path.join(data_root, split + '_set.pkl')
         if os.path.exists(self.set_file):
-            print("Loading " + name + " dataset")
+            print("Loading " + split + " dataset")
             self.samples = pickle.load(open(self.set_file, 'rb'))
         else:
-            print("Building " + name + " dataset")
+            print("Building " + split + " dataset")
             excluded = 0
             for index, row in tqdm(df_samples.iterrows(), total=df_samples.shape[0]):
                 # Keys are a  triple (subject_id, study_id, dicom_id)
@@ -73,25 +71,25 @@ class MimicDataset(Dataset):
 
                 # Fetch report
                 report = df_reports.loc[df_reports['study'] == ('s' + str(row['study_id']))]
-                if not report['findings'].isna().any():
-                    txt = ''.join(report['findings'].values)
-                elif not report['impression'].isna().any():
-                    txt = ''.join(report['impression'].values)
-                else:
-                    txt = ''
+                txt = ''
+                for section in ['impression', 'findings', 'last_paragraph', 'comparison']:
+                    if not report[section].isna().any():
+                        txt = ''.join(report[section].values)
+                        break
 
                 if not (True in label.values) or report.empty or txt == '':
                     excluded += 1
+                    # open('excluded.txt', 'a+').write(str(key)+"\n")
                     continue
                 self.samples[key] = (label, txt)
 
-            print("Excluded " + str(excluded) + " samples (no label or report). Current sample set is ",
+            print("Excluded " + str(excluded) + " samples (no label or report). Current samples set is ",
                   len(self.samples))
             # save constructed set
             pickle.dump(self.samples, open(self.set_file, 'wb'))
 
         self.keys = list(self.samples.keys())
-        self.transform = get_transforms(name)
+        self.transform = get_transforms(split)
 
     def __getitem__(self, idx):
         subject_id, study_id, dicom_id = self.keys[idx]
@@ -99,7 +97,7 @@ class MimicDataset(Dataset):
         img = torch.tensor(0)
         label = torch.tensor(0)
         report = torch.tensor(0)
-
+        import time
         if self.return_image:
             img_path = os.path.join(data_root,
                                     image_folder,
@@ -119,13 +117,8 @@ class MimicDataset(Dataset):
 
         if self.return_label:
             label, _ = sample
-            if self.task_binary:
-                if label['No Finding'].all():
-                    label = np.array([1, 0])
-                else:
-                    label = np.array([0, 1])
-            else:
-                label = (np.array(label.values.tolist()).flatten()[2:] > 0)  # get positive diagnostics
+            label = label.drop(columns=['subject_id', 'study_id'])
+            label = self.get_encoded_label(label)
             label = label.astype(np.float)
 
         return {'idx': idx,
@@ -137,18 +130,11 @@ class MimicDataset(Dataset):
     def __len__(self):
         return len(self.keys)
 
-    def get_classes_name(self):
-        if self.task_binary:
-            return ['No Finding', 'Findings']
-        else:
-            return ["Atelectasis", "Cardiomegaly", "Consolidation", "Edema", "Enlarged Cardiomediastinum", "Fracture",
-                    "Lung Lesion", "Lung Opacity", "No Finding", "Pleural Effusion", "Pleural Other", "Pneumonia",
-                    "Pneumothorax", "Support Devices"]
-
 
 if __name__ == '__main__':
-    d = MimicDataset("test", return_image=True,
+    d = MimicDataset("train", return_image=True,
                      return_label=True,
-                     return_report=True)
-    for _ in tqdm(d):
+                     return_report=True,
+                     task='binary')
+    for s in tqdm(d):
         continue

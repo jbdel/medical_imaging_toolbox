@@ -17,27 +17,51 @@ This package computes the embeddings of reports. We evaluate [BioclinicalBERT](h
 
 <b>BioClinicalBERT</b> and <b>BlueBert</b> are directly available through the [HuggingFace transformers](https://github.com/huggingface/transformers) library.
 ```
-python -m linguistic_embeddings.t_sne --model Bio_ClinicalBERT --output linguistic_embeddings --dataset MimicDataset
-python -m linguistic_embeddings.t_sne --model BlueBERT --output linguistic_embeddings --dataset MimicDataset
+python -m linguistic_embeddings.main --model {Bio_ClinicalBERT,Bio_ClinicalBERT} \
+                                     --model_dir linguistic_embeddings/models  \
+                                     --dataset MimicDataset  \
+                                     --dataset_task binary  \
+                                     --visualization t-SNE
 ```
 where `dataset` is a dataset from dataloader package.
 
 <b>BioSentVec</b>
 Download the pretrained BioSentVec [model](https://ftp.ncbi.nlm.nih.gov/pub/lu/Suppl/BioSentVec/BioSentVec_PubMed_MIMICIII-bigram_d700.bin) (21GB (700dim, trained on PubMed+MIMIC-III))
 ```
-python -m linguistic_embeddings.t_sne --model BioSentVec --output linguistic_embeddings --dataset MimicDataset
+python -m linguistic_embeddings.main \
+    --model BioSentVec \
+    --model_dir linguistic_embeddings/models  \
+    --dataset MimicDataset  \
+    --dataset_task binary  \
+    --save_vectors True \
+    --visualization t-SNE
 ```
 
 <b>Doc2Vec</b>
 ```
-python -m linguistic_embeddings.train_doc2vec --epochs 100 --vector_size 300 --output linguistic_embeddings/Doc2Vec/
-python -m linguistic_embeddings.t_sne --model Doc2Vec --output linguistic_embeddings --dataset MimicDataset \
---doc2vec_model DBOW_vector300_window8_count15_epoch100_mimic.doc2vec
+python -m linguistic_embeddings.main \
+    --model Doc2Vec \
+    --model_dir linguistic_embeddings/models  \
+    --dataset MimicDataset  \
+    --dataset_task binary  \
+    --doc2vec_model mymodel/DBOW_vector300_window8_count15_epoch100_mimic.doc2vec \
+    --name mymodel \
+    --save_vectors True \
+    --visualization t-SNE
 ```
 
-Using the `linguistic_embeddings.t_sne` command will plot T-SNE and also compute the vector embeddings (saved in npy) in 
-the respective model folder.
-
+<b>CNN</b>
+To get the vectors of a model trained in the classifier package, use:
+```
+python -m linguistic_embeddings.main \
+    --model CNN \
+    --model_dir linguistic_embeddings/models  \
+    --dataset MimicDataset  \
+    --dataset_task six  \
+    --cnn_model classifier/checkpoints/densenet169/best196.pkl  \
+    --name densenet169 \
+    --visualization t-SNE
+```
 Every used model is defined in `model.py`
 
 ## TODO

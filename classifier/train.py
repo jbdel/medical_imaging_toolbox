@@ -8,7 +8,7 @@ from .metrics.metrics import get_metrics
 import collections
 
 
-def train(net, losses_fn, train_loader, eval_loader, args, optimizer, scheduler):
+def train(net, losses_fn, train_loader, eval_loader, optimizer, scheduler, args, data_args, model_args):
     logfile = open(
         args.output + "/" + args.name +
         '/log_run.txt',
@@ -56,7 +56,6 @@ def train(net, losses_fn, train_loader, eval_loader, args, optimizer, scheduler)
                 args.early_stop,
                 args.early_stop_metric,
                 args.best_metric_value,
-                *[group['lr'] for group in optimizer.param_groups],
                 ((time.time() - time_start) / (step + 1)) * (
                         (len(train_loader.dataset) / args.batch_size) - step) / 60,
             )
@@ -80,7 +79,9 @@ def train(net, losses_fn, train_loader, eval_loader, args, optimizer, scheduler)
                         'state_dict': net.state_dict(),
                         'optimizer': optimizer.state_dict(),
                         'args': args,
-                        'metrics': metrics
+                        'data_args': data_args,
+                        'model_args': model_args,
+                        'metrics': metrics,
                     },
                     args.output + "/" + args.name +
                     '/best' + str(args.seed) + '.pkl'
@@ -90,7 +91,7 @@ def train(net, losses_fn, train_loader, eval_loader, args, optimizer, scheduler)
 
             # Scheduler
             if args.use_scheduler:
-                scheduler.step(metrics["label_loss"])
+                scheduler.step(metrics[args.early_stop_metric])
 
         # Early stop ?
         if args.early_stop == args.no_improvement:

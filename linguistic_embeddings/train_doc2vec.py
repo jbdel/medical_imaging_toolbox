@@ -45,7 +45,7 @@ def train_doc2vec(net, train_loader, eval_loader, test_loader, args):
     train_corpus = []
     print("Building corpus")
     os.makedirs(args.output, exist_ok=True)
-    doc2vec_corps = os.path.join(args.output, "doc2vec_corps.pkl")
+    doc2vec_corps = os.path.join(args.output, 'Doc2Vec', "doc2vec_corps.pkl")
     study_id_dict = set()
     if os.path.exists(doc2vec_corps):
         train_corpus = pickle.load(open(doc2vec_corps, 'rb'))
@@ -77,7 +77,7 @@ def train_doc2vec(net, train_loader, eval_loader, test_loader, args):
                               '_window' +
                               str(doc2vec.window) +
                               '_count' +
-                              str(doc2vec.min_count) +
+                              str(doc2vec.vocabulary.min_count) +
                               '_epoch' +
                               str(doc2vec.epochs) +
                               '_mimic.doc2vec'))

@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from dataloaders.MimicDataset import MimicDataset
+from dataloaders import *
 import torch.optim as optim
 from torch.utils.data import DataLoader
 
@@ -15,24 +15,24 @@ from .models.utils import get_model
 def parse_args():
     parser = argparse.ArgumentParser()
     # Model
-    parser.add_argument('--model', type=str, default="resnet18")
+    parser.add_argument('--backbone', type=str, default="resnet18")
     parser.add_argument('--checkpoint', type=str, default=None)
     parser.add_argument('--dataset', type=str, default="MimicDataset")
+    parser.add_argument('--dataset_task', type=str, default="binary")
     parser.add_argument('--losses', action='store', type=str, nargs='+')
-
-    parser.add_argument('--num_classes', type=int, default=2)
-    parser.add_argument('--vector_size', type=int, default=300)
     parser.add_argument('--pred_func', type=str, default="amax")
 
+    parser.add_argument('--vector_size', type=int, default=300)
+
     # Data
-    parser.add_argument('--vector_folder', type=str, default='mimic-crx-vectors/')
+    parser.add_argument('--vector_folder', type=str, default=None)
     parser.add_argument('--return_image', type=bool, default=False)
     parser.add_argument('--return_report', type=bool, default=False)
     parser.add_argument('--return_label', type=bool, default=False)
 
     # Training
     parser.add_argument('--use_scheduler', type=bool, default=False)
-    parser.add_argument('--lr_base', type=float, default=0.0001)
+    parser.add_argument('--lr_base', type=float, default=0.01)
     parser.add_argument('--lr_max', type=float, default=0.02)
     parser.add_argument('--grad_norm_clip', type=float, default=-1)
 
@@ -54,7 +54,6 @@ def parse_args():
 if __name__ == '__main__':
     # Base on args given, compute new args
     args = parse_args()
-
     # Seed
     if torch.cuda.device_count() > 1:
         torch.cuda.manual_seed_all(args.seed)
@@ -68,11 +67,12 @@ if __name__ == '__main__':
     data_args = {'return_image': args.return_image,
                  'return_label': args.return_label,
                  'return_report': args.return_report,
-                 'task_binary': args.num_classes == 2}
+                 'task': args.dataset_task,
+                 'vector_folder': args.vector_folder}
 
-    train_dset = eval(args.dataset)('train', **data_args)
-    eval_dset = eval(args.dataset)('validate', **data_args)
-    test_dset = eval(args.dataset)('test', **data_args)
+    train_dset: BaseDataset = eval(args.dataset)('train', **data_args)
+    eval_dset: BaseDataset = eval(args.dataset)('validate', **data_args)
+    test_dset: BaseDataset = eval(args.dataset)('test', **data_args)
 
     train_loader = DataLoader(train_dset,
                               args.batch_size,
@@ -82,18 +82,30 @@ if __name__ == '__main__':
                               drop_last=True)
 
     eval_loader = DataLoader(eval_dset,
-                             args.batch_size,
+                             int(args.batch_size / 2),
                              num_workers=4,
                              pin_memory=True)
 
     test_loader = DataLoader(test_dset,
-                             args.batch_size,
+                             int(args.batch_size / 2),
                              num_workers=4,
                              pin_memory=True)
 
+    print('Using Dataloader', type(train_dset).__name__, 'with task', args.dataset_task)
+
     # Net
-    net = get_model(args)
-    print('Using network ', type(net).__name__, 'returning ', net.get_forward_keys())
+    net_func = get_model(args)
+    model_args = {
+        'backbone': args.backbone,
+        'num_classes': train_dset.num_classes,
+        'pretrained': True,
+        'vector_size': args.vector_size,
+        'net_func': net_func
+    }
+    net = net_func(**model_args)
+    print('Using network', type(net).__name__, 'returning ', net.get_forward_keys(), 'with', net.num_classes,
+          'output neurons')
+
     # Losses
     losses_fn = get_losses_fn(args)
     print('Using losses', [v[0] for _, v in losses_fn.items()], "needing the model to return", list(losses_fn.keys()))
@@ -109,10 +121,11 @@ if __name__ == '__main__':
     scheduler = None
     if args.use_scheduler:
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
-                                                               mode='min',
+                                                               mode='max',
                                                                factor=0.1,
-                                                               patience=5,
-                                                               threshold=0.0001)
+                                                               patience=2,
+                                                               threshold=0.005,  # 0.5%
+                                                               threshold_mode='abs')
         print('Using scheduler', scheduler)
 
         # scheduler = optim.lr_scheduler.CyclicLR(optimizer,
@@ -126,12 +139,14 @@ if __name__ == '__main__':
     net.cuda()
     print("Let's use", torch.cuda.device_count(), "GPUs!")
 
-    if args.checkpoint is not None:
-        print("Let's load checkpoint", str(args.checkpoint))
-        ckpt = torch.load(args.checkpoint)
-        net.load_state_dict(ckpt['state_dict'])
-        optimizer.load_state_dict(ckpt['optimizer'])
-        args = ckpt['args']
-
     # Run training
-    eval_accuracies = train(net, losses_fn, train_loader, eval_loader, args, optimizer, scheduler)
+    eval_accuracies = train(net,
+                            losses_fn,
+                            train_loader,
+                            eval_loader,
+                            optimizer,
+                            scheduler,
+                            args,
+                            data_args,
+                            model_args
+                            )
