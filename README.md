@@ -1,10 +1,8 @@
 Python3.8
-
 <p><b>linguistic_embedding package</b></p>
-The linguistic_embedding package 
-(see dedicated [README](https://github.com/jbdel/medical_imaging_toolbox/tree/main/linguistic_embeddings)) is used to compute
-vector representations of a medical dataset reports. So far, one can use [BioclinicalBERT](https://github.com/EmilyAlsentzer/clinicalBERT/), 
-[BlueBert](https://github.com/ncbi-nlp/bluebert/), [BioSentVec](https://github.com/ncbi-nlp/BioSentVec) and Doc2Vec.
+
+This package is used to compute vector representations of a medical dataset reports. So far, one can use [BioclinicalBERT](https://github.com/EmilyAlsentzer/clinicalBERT/), [BlueBert](https://github.com/ncbi-nlp/bluebert/)
+, [BioSentVec](https://github.com/ncbi-nlp/BioSentVec) and Doc2Vec.
 
 To run a model, let's use:
 ```
