@@ -28,3 +28,6 @@ Run `bash run_mimic_cxr.sh` to train a model on the MIMIC-CXR data.
 `python extract.py`
 
 This will create a r2gen_mimic.json file with ground truth and hypotheses. 
+
+Pretrained MIMIC model and generated captions can be downloaded [here](https://drive.google.com/file/d/13b0Zbl4ApTBtQbxnNrCPGobJPrK6Ky8B/view?usp=sharing)
+
