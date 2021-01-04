@@ -24,8 +24,9 @@ for the [MimicDataset](https://github.com/jbdel/medical_imaging_toolbox/tree/mai
 Vectors are created in `linguistics/embeddings/models/BioSentVec/vectors/` and t-SNE plots are dump 
 also (see `visualization` command):
 
-<img src='https://i.imgur.com/tT7h3hb.png' width="400px" /><br/>
-<i>MimicDataset test-set</i>
+<img src='https://i.imgur.com/tT7h3hb.png' width="400px" /><img src='https://i.imgur.com/XAr6uDH.png' width="400px" /><br/>
+<br/>
+<i>MimicDataset test-set and eval-set</i>
 
 Above is the results of t-SNE on the six-class variant (`--dataset_task six`) of MimicDataset.
 <p><b>classifier package</b></p>
