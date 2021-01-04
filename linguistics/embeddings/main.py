@@ -12,13 +12,13 @@ from collections import defaultdict
 from .models import get_foward_function
 from .utils import get_output_dir, compute_embeddings
 from dataloaders import *
-from linguistic_embeddings.train_doc2vec import EpochLogger
+from linguistics.embeddings.train_doc2vec import EpochLogger
 
 parser = argparse.ArgumentParser()
 # Dataset
 parser.add_argument('--model', type=str, default='Bio_ClinicalBERT',
                     choices=['Bio_ClinicalBERT', 'Doc2Vec', 'BioSentVec', 'BlueBERT', 'CNN'])
-parser.add_argument('--model_dir', type=str, default='linguistic_embeddings/models')
+parser.add_argument('--model_dir', type=str, default='linguistics/embeddings/models')
 parser.add_argument('--dataset', type=str, default="MimicDataset")
 parser.add_argument('--dataset_task', type=str, default="all")
 parser.add_argument('--task_binary', type=bool, default=False)

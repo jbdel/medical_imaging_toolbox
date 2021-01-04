@@ -2,6 +2,8 @@ from __future__ import print_function
 import os
 import numpy as np
 from .MimicDataset import MimicDataset
+from linguistics.embeddings.utils import slugify
+from tqdm import tqdm
 
 
 class VectorMimicDataset(MimicDataset):
@@ -15,7 +17,7 @@ class VectorMimicDataset(MimicDataset):
         subject_id, study_id, _ = sample['key']
         try:
             vector_path = os.path.join(self.vector_folder,
-                                       str(sample['key']) + '.npy'
+                                       slugify(sample['key']) + '.npy'
                                        )
             vector = np.load(vector_path)
         except FileNotFoundError:
@@ -32,5 +34,5 @@ if __name__ == '__main__':
                            return_image=True,
                            return_label=True,
                            return_report=True)
-    # for _ in tqdm(d):
-    #     continue
+    for _ in tqdm(d):
+        continue

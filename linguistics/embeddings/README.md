@@ -17,8 +17,8 @@ This package computes the embeddings of reports. We evaluate [BioclinicalBERT](h
 
 <b>BioClinicalBERT</b> and <b>BlueBert</b> are directly available through the [HuggingFace transformers](https://github.com/huggingface/transformers) library.
 ```
-python -m linguistic_embeddings.main --model {Bio_ClinicalBERT,Bio_ClinicalBERT} \
-                                     --model_dir linguistic_embeddings/models  \
+python -m linguistics.embeddings.main --model {Bio_ClinicalBERT,Bio_ClinicalBERT} \
+                                     --model_dir linguistics/embeddings/models  \
                                      --dataset MimicDataset  \
                                      --dataset_task binary  \
                                      --visualization t-SNE
@@ -28,9 +28,9 @@ where `dataset` is a dataset from dataloader package.
 <b>BioSentVec</b>
 Download the pretrained BioSentVec [model](https://ftp.ncbi.nlm.nih.gov/pub/lu/Suppl/BioSentVec/BioSentVec_PubMed_MIMICIII-bigram_d700.bin) (21GB (700dim, trained on PubMed+MIMIC-III))
 ```
-python -m linguistic_embeddings.main \
+python -m linguistics.embeddings.main \
     --model BioSentVec \
-    --model_dir linguistic_embeddings/models  \
+    --model_dir linguistics/embeddings/models  \
     --dataset MimicDataset  \
     --dataset_task binary  \
     --save_vectors True \
@@ -39,9 +39,9 @@ python -m linguistic_embeddings.main \
 
 <b>Doc2Vec</b>
 ```
-python -m linguistic_embeddings.main \
+python -m linguistics.embeddings.main \
     --model Doc2Vec \
-    --model_dir linguistic_embeddings/models  \
+    --model_dir linguistics/embeddings/models  \
     --dataset MimicDataset  \
     --dataset_task binary  \
     --doc2vec_model mymodel/DBOW_vector300_window8_count15_epoch100_mimic.doc2vec \
@@ -53,9 +53,9 @@ python -m linguistic_embeddings.main \
 <b>CNN</b>
 To get the vectors of a model trained in the classifier package, use:
 ```
-python -m linguistic_embeddings.main \
+python -m linguistics.embeddings.main \
     --model CNN \
-    --model_dir linguistic_embeddings/models  \
+    --model_dir linguistics/embeddings/models  \
     --dataset MimicDataset  \
     --dataset_task six  \
     --cnn_model classifier/checkpoints/densenet169/best196.pkl  \

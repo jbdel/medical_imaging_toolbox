@@ -6,9 +6,9 @@ This package is used to compute vector representations of a medical dataset repo
 
 To run a model, let's use:
 ```
-python -m linguistic_embeddings.main \
+python -m linguistics.embeddings.main \
     --model BioSentVec \
-    --model_dir linguistic_embeddings/models  \
+    --model_dir linguistics/embeddings/models  \
     --dataset MimicDataset  \
     --dataset_task binary  \
     --save_vectors True \
@@ -21,7 +21,7 @@ The `dataset_task` argument defines how the task is configured. For example, we 
 some labels into clusters. Label trees can be defined as show 
 for the [MimicDataset](https://github.com/jbdel/medical_imaging_toolbox/tree/main/dataloaders/MimicDataset/BaseMimic.py).
 
-Vectors are created in `linguistic_embeddings/models/BioSentVec/vectors/` and t-SNE plots are dump 
+Vectors are created in `linguistics/embeddings/models/BioSentVec/vectors/` and t-SNE plots are dump 
 also (see `visualization` command):
 
 <img src='https://i.imgur.com/tT7h3hb.png' width="400px" /><br/>
@@ -56,7 +56,7 @@ python -m classifier.main \
  --dataset VectorMimicDataset \
  --losses classification cosine \
  --vector_size 700 \
- --vector_folder linguistic_embeddings/models/BioSentVec/vectors/ \
+ --vector_folder linguistics/embeddings/models/BioSentVec/vectors/ \
  --dataset_task binary \
  --return_image True \
  --return_label True 

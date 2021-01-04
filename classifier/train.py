@@ -107,22 +107,23 @@ def train(net, losses_fn, train_loader, eval_loader, optimizer, scheduler, args,
 def evaluate(net, losses_fn, eval_loader, args):
     print('Evaluation...')
     net.eval()
-    preds = collections.defaultdict(list)
-    labels = collections.defaultdict(list)
+    with torch.no_grad():
+        preds = collections.defaultdict(list)
+        labels = collections.defaultdict(list)
 
-    # Getting all prediction and labels
-    for step, sample in enumerate(eval_loader):
-        pred = net(sample)
-        for key in losses_fn.keys():
-            preds[key].append(pred[key].cpu().data.numpy())
-            labels[key].append(sample[key].cpu().data.numpy())
+        # Getting all prediction and labels
+        for step, sample in enumerate(eval_loader):
+            pred = net(sample)
+            for key in losses_fn.keys():
+                preds[key].append(pred[key].cpu().data.numpy())
+                labels[key].append(sample[key].cpu().data.numpy())
 
-    metrics = dict()
-    for key in preds.keys():
-        name, _, _ = losses_fn[key]
-        pred = np.concatenate(preds[key])
-        label = np.concatenate(labels[key])
-        ret_metrics = get_metrics(losses_fn[key], pred, label, args, eval_loader)
-        metrics = {**metrics, **ret_metrics}
+        metrics = dict()
+        for key in preds.keys():
+            name, _, _ = losses_fn[key]
+            pred = np.concatenate(preds[key])
+            label = np.concatenate(labels[key])
+            ret_metrics = get_metrics(losses_fn[key], pred, label, args, eval_loader)
+            metrics = {**metrics, **ret_metrics}
 
     return metrics

@@ -100,7 +100,7 @@ if __name__ == '__main__':
         'num_classes': train_dset.num_classes,
         'pretrained': True,
         'vector_size': args.vector_size,
-        'net_func': net_func
+        'net_func': net_func.__name__
     }
     net = net_func(**model_args)
     print('Using network', type(net).__name__, 'returning ', net.get_forward_keys(), 'with', net.num_classes,
