@@ -1,8 +1,9 @@
-from dataloaders.BaseDataset import BaseDataset
 import numpy as np
+from abc import ABC
+from dataloaders.BaseDataset import BaseDataset
 
 
-class BaseMimic(BaseDataset):
+class BaseMimic(BaseDataset, ABC):
     def __init__(self, task):
         super().__init__(task)
 
@@ -37,9 +38,22 @@ class BaseMimic(BaseDataset):
             return {v: [v] for v in BaseMimic.get_all_class_names_ordered()}
 
     def get_encoded_label(self, label):
-        # We can afford to put exceptions here before computing the label
-        # For Mimic there is one when task is binary: both No findings and Support Devices can coexist
+        """
+        Dataset specific label processing
+        :param label: 1-D python list
+        """
+        label = np.array(label).astype(np.float)
+        label[label < 0] = 0.0
+        # print(self.print_label(label, self.get_all_class_names_ordered()))
+
+        # If no label is specified, put No Finding
+        if sum(label) == 0:
+            label[self.pos_label_all['No Finding']] = 1.0
+
+        # When task is binary we cant have No findings and Support Devices to coexist
         # This would return the label [1,1] according to the binary tree.
-        if self.task == 'binary' and (label['Support Devices'] == 1.0).all() and (label['No Finding'] == 1.0).all():
-            label['Support Devices'] = 0.0
+        if self.task == 'binary' \
+                and (label[self.pos_label_all['Support Devices']] == 1.0) \
+                and (label[self.pos_label_all['No Finding']] == 1.0):
+            label[self.pos_label_all['Support Devices']] = 0.0
         return super().get_encoded_label(label)

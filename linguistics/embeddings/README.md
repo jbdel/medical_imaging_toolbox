@@ -17,43 +17,40 @@ This package computes the embeddings of reports. We evaluate [BioclinicalBERT](h
 
 <b>BioClinicalBERT</b> and <b>BlueBert</b> are directly available through the [HuggingFace transformers](https://github.com/huggingface/transformers) library.
 ```
-python -m linguistics.embeddings.main --model {Bio_ClinicalBERT,Bio_ClinicalBERT} \
+python -m linguistics.embeddings.compute_embeddings --model {Bio_ClinicalBERT,BlueBERT} \
                                      --model_dir linguistics/embeddings/models  \
                                      --dataset MimicDataset  \
-                                     --dataset_task binary  \
-                                     --visualization t-SNE
+                                     --dataset_task binary  
 ```
 where `dataset` is a dataset from dataloader package.
 
 <b>BioSentVec</b>
 Download the pretrained BioSentVec [model](https://ftp.ncbi.nlm.nih.gov/pub/lu/Suppl/BioSentVec/BioSentVec_PubMed_MIMICIII-bigram_d700.bin) (21GB (700dim, trained on PubMed+MIMIC-III))
 ```
-python -m linguistics.embeddings.main \
+python -m linguistics.embeddings.compute_embeddings \
     --model BioSentVec \
     --model_dir linguistics/embeddings/models  \
     --dataset MimicDataset  \
     --dataset_task binary  \
-    --save_vectors True \
-    --visualization t-SNE
+    --save_vectors True 
 ```
 
 <b>Doc2Vec</b>
 ```
-python -m linguistics.embeddings.main \
+python -m linguistics.embeddings.compute_embeddings \
     --model Doc2Vec \
     --model_dir linguistics/embeddings/models  \
     --dataset MimicDataset  \
     --dataset_task binary  \
     --doc2vec_model mymodel/DBOW_vector300_window8_count15_epoch100_mimic.doc2vec \
     --name mymodel \
-    --save_vectors True \
-    --visualization t-SNE
+    --save_vectors True 
 ```
 
 <b>CNN</b>
 To get the vectors of a model trained in the classifier package, use:
 ```
-python -m linguistics.embeddings.main \
+python -m linguistics.embeddings.compute_embeddings \
     --model CNN \
     --model_dir linguistics/embeddings/models  \
     --dataset MimicDataset  \

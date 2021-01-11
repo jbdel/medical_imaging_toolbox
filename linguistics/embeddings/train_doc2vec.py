@@ -2,7 +2,7 @@ import pickle
 from tqdm import tqdm
 import argparse, os, random
 import numpy as np
-from dataloaders.MimicDataset import MimicDataset
+from dataloaders.MimicDataset import OldMimicDataset
 from torch.utils.data import DataLoader
 import gensim
 import multiprocessing
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 
     # DataLoader
     train_dset = eval(args.dataset)('train', return_report=True)
-    eval_dset = eval(args.dataset)('validate', return_report=True)
+    eval_dset = eval(args.dataset)('val', return_report=True)
     test_dset = eval(args.dataset)('test', return_report=True)
 
     train_loader = DataLoader(train_dset,

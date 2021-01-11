@@ -40,7 +40,6 @@ def get_foward_function(args):
         ).pooler_output.cpu().data.numpy().squeeze(0)
 
     elif args.model == "BioSentVec":
-        # Uncertain ?
         model = sent2vec.Sent2vecModel()
         ckpt = os.path.join(args.model_dir, 'BioSentVec', 'BioSentVec_PubMed_MIMICIII-bigram_d700.bin')
         assert os.path.exists(ckpt), 'Please download BioSentVec_PubMed_MIMICIII-bigram_d700.bin'

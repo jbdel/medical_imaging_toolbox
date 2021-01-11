@@ -15,7 +15,9 @@ class BaseDataset(Dataset):
         self.task_classes = list(self.get_classes())
         self.num_classes = len(self.task_classes)
 
-        self.pos_label = {c: i for i, c in enumerate(self.get_classes())}
+        self.pos_label_all = {c: i for i, c in enumerate(self.get_all_class_names_ordered())}
+        self.pos_label_task = {c: i for i, c in enumerate(self.get_classes())}
+
         self.super_label = {c: self.get_super_label(c) for c in self.get_all_class_names_ordered()}
 
     @staticmethod
@@ -43,14 +45,21 @@ class BaseDataset(Dataset):
             if c in v:
                 return k
 
+    def print_label(self, label, classes=None):
+        if classes is None:
+            classes = self.task_classes
+        print(''.join("{:<12}".format(c[:10]) for c in classes))
+        print(''.join("{:<12}".format(l) for l in label))
+
     def get_encoded_label(self, label):
-        """Given a pandas Series (a row), return one hot or multi-hot vector. Complexity O(len(label))"""
+        """Given a float numpy vector, return one hot or multi-hot vector. Complexity O(len(label))"""
         vector = np.zeros(len(self.task_classes))
-        for (c, l) in label.iteritems():
-            if (l > 0.0).all():
+        for i, v in enumerate(label):
+            if v == 1.0:
+                c = self.get_all_class_names_ordered()[i]
                 try:
-                    pos = self.pos_label[self.super_label[c]]
-                    vector[pos] = 1.
+                    pos = self.pos_label_task[self.super_label[c]]
+                    vector[pos] = 1.0
                 except KeyError:
                     continue
         return vector

@@ -1,140 +1,90 @@
-from __future__ import print_function
 import os
-import pickle
-import sys
+import json
 import torch
 from PIL import Image
-import numpy as np
-import pandas as pd
+from .BaseMimic import BaseMimic
 import torchvision.transforms as transforms
 from tqdm import tqdm
-from .BaseMimic import BaseMimic
+import pandas as pd
+import numpy as np
 
 data_root = './data/mimic-crx/'
-split_file = 'mimic-cxr-2.0.0-split.csv'
-label_file = 'mimic-cxr-2.0.0-chexpert.csv'
-report_file = 'mimic-crx-reports/mimic_cxr_sectioned.csv'
-image_folder = 'mimic-crx-jpg-images/'
-
-
-def get_transforms(name):
-    if name == 'train':
-        return transforms.Compose([
-            transforms.RandomResizedCrop(224),
-            transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ])
-
-    return transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
+ann_file = 'annotations.json'
+image_root = 'images'
 
 
 class MimicDataset(BaseMimic):
     def __init__(self, split, return_image=False, return_label=False, return_report=False, task='all', **kwargs):
         super(MimicDataset, self).__init__(task)
-        assert split in ['train', 'validate', 'test']
+        assert split in ['train', 'val', 'test']
         self.split = split
+
         self.return_image = return_image
         self.return_report = return_report
         self.return_label = return_label
-        self.task = task
+        self.transform = MimicDataset.get_transforms(split)
 
-        # Open split file
-        df_samples = pd.read_csv(os.path.join(data_root, split_file))
-        df_samples = df_samples.loc[df_samples['split'] == split]
-        # Open label file
-        df_labels = pd.read_csv(os.path.join(data_root, label_file))
-        # Open report file
-        df_reports = pd.read_csv(os.path.join(data_root, report_file))
+        self.ann = json.loads(open(os.path.join(data_root, ann_file), 'r').read())
+        self.examples = self.ann[split]
 
-        # Building set
-        self.samples = {}
-        self.set_file = os.path.join(data_root, split + '_set.pkl')
-        if os.path.exists(self.set_file):
-            print("Loading " + split + " dataset")
-            self.samples = pickle.load(open(self.set_file, 'rb'))
-        else:
-            print("Building " + split + " dataset")
-            excluded = 0
-            for index, row in tqdm(df_samples.iterrows(), total=df_samples.shape[0]):
-                # Keys are a  triple (subject_id, study_id, dicom_id)
-                key = (row['subject_id'], row['study_id'], row['dicom_id'])
-
-                # Fetch label
-                label = df_labels.loc[(df_labels['subject_id'] == row['subject_id']) &
-                                      (df_labels['study_id'] == row['study_id'])].fillna(0)
-
-                # Fetch report
-                report = df_reports.loc[df_reports['study'] == ('s' + str(row['study_id']))]
-                txt = ''
-                for section in ['impression', 'findings', 'last_paragraph', 'comparison']:
-                    if not report[section].isna().any():
-                        txt = ''.join(report[section].values)
-                        break
-
-                if not (True in label.values) or report.empty or txt == '':
-                    excluded += 1
-                    # open('excluded.txt', 'a+').write(str(key)+"\n")
-                    continue
-                self.samples[key] = (label, txt)
-
-            print("Excluded " + str(excluded) + " samples (no label or report). Current samples set is ",
-                  len(self.samples))
-            # save constructed set
-            pickle.dump(self.samples, open(self.set_file, 'wb'))
-
-        self.keys = list(self.samples.keys())
-        self.transform = get_transforms(split)
+    def __len__(self):
+        return len(self.examples)
 
     def __getitem__(self, idx):
-        subject_id, study_id, dicom_id = self.keys[idx]
-        sample = self.samples[self.keys[idx]]  # A sample is a [label, report]
-        img = torch.tensor(0)
+        example = self.examples[idx]
+        image_id = example['id']
+        study_id = example['study_id']
+        subject_id = example['subject_id']
+
+        key = (subject_id, study_id, image_id)
+
+        image = torch.tensor(0)
         label = torch.tensor(0)
         report = torch.tensor(0)
-        import time
+
         if self.return_image:
-            img_path = os.path.join(data_root,
-                                    image_folder,
-                                    'p' + str(subject_id)[:2],  # 10000032 -> p10
-                                    'p' + str(subject_id),
-                                    's' + str(study_id),
-                                    str(dicom_id) + '.jpeg'
-                                    )
+            image_path = example['image_path']
             try:
-                img = self.transform(Image.open(img_path).convert('RGB'))
+                image = self.transform(Image.open(os.path.join(data_root, image_root, image_path)).convert('RGB'))
             except FileNotFoundError:
-                print('image not found for key', self.keys[idx], img_path)
+                print('image not found for key', image_path)
                 raise
 
         if self.return_report:
-            _, report = sample
+            report = example['ground_truth']
 
         if self.return_label:
-            label, _ = sample
-            label = label.drop(columns=['subject_id', 'study_id'])
-            label = self.get_encoded_label(label)
-            label = label.astype(np.float)
+            label = self.get_encoded_label(example['label'])
 
         return {'idx': idx,
-                'key': self.keys[idx],
+                'key': key,
                 'report': report,
-                'img': img,
+                'img': image,
                 'label': label}
 
-    def __len__(self):
-        return len(self.keys)
+    @staticmethod
+    def get_transforms(name):
+        if name == 'train':
+            return transforms.Compose([
+                transforms.Resize(256),
+                transforms.RandomCrop(224),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize((0.485, 0.456, 0.406),
+                                     (0.229, 0.224, 0.225))])
+        else:
+            return transforms.Compose([
+                transforms.Resize((224, 224)),
+                transforms.ToTensor(),
+                transforms.Normalize((0.485, 0.456, 0.406),
+                                     (0.229, 0.224, 0.225))])
 
 
 if __name__ == '__main__':
-    d = MimicDataset("train", return_image=True,
+    d = MimicDataset("train",
+                     return_image=True,
                      return_label=True,
                      return_report=True,
-                     task='binary')
+                     task='six')
     for s in tqdm(d):
         continue

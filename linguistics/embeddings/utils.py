@@ -1,10 +1,16 @@
-import osembeddings
+import os
+import linguistics.embeddings
 import unicodedata
 import re
 from collections import defaultdict
 from tqdm import tqdm
 import numpy as np
 
+def check_args(args):
+    if args.model == 'Doc2Vec':
+        assert args.doc2vec_model is not None, 'You need to specifiy a doc2vec model'
+    if args.model == 'CNN':
+        assert args.cnn_model is not None, 'You need to specifiy a CNN model'
 
 def slugify(value):
     """
@@ -19,27 +25,30 @@ def slugify(value):
     value = re.sub(r'[^\w\s-]', '', value.lower())
     return re.sub(r'[-\s]+', '-', value).strip('-_')
 
+
 def get_output_dir(args):
     return os.path.join(args.model_dir, args.model, args.name if args.name is not None else '')
 
 
 def compute_embeddings(args, model, dataset, outdir, save_vectors=False):
-    vectors = defaultdict(list)
+    vectors = list()
+    labels = list()
     class_names = dataset.task_classes
-    print('Computing representations...')
     for sample in tqdm(dataset, total=len(dataset)):
         label = sample['label']
+        if '.' in sample['report']:
+            sample['report'] = ''.join(sample['report'].split('.')[:1])
         vector = model(sample)
         if save_vectors:
             np.save(os.path.join(outdir,
                                  "vectors",
                                  slugify(sample['key'])
                                  ), np.array(vector))
-
         if sum(label) > 1.0:  # TODO we exclude multilabel for plotting, should we ?
             continue
-        label = np.where(label == 1.0)[0][0]
-        class_name = class_names[label]
-        vectors[class_name].append(vector)
 
-    return vectors
+        c = np.where(label == 1.)[0][0]
+        labels.append(class_names[c])
+        vectors.append(vector)
+
+    return vectors, np.array(labels)
