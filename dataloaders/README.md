@@ -1,23 +1,24 @@
 ### Dataloaders
+
+A dataset should return a dictionary. The dictionnary must contain at least the key "key" that 
+defines the unique identifier of the sample. 
+
+The rest is up to the dataset data.
+
 <b>```MimicDataset.py```</b> <br/>
-JB version. Returns 
-- a `key` that is a triple `(subject_id, study_id, dicom_id)`
-- an image, provided `return_image` is True
-- a label, provided `return_label` is True
-- a report, provided `return_report` is True
+[Download annotations.json](http://)
 
-Report consists of the `findings` section if any, otherwise consists of the `impression` section. If both findings and impression
-are non-existent, the full example is discarded. 
+Loads `annotations.json` containing examples. An example is described by:
 
-## TODO 
+`dict_keys(['id', 'study_id', 'subject_id', 'image_path', 'split', 'label', 'report'])`
 
-Ideally, all dataloaders should return the same structure, in the same order.
-So far, mine is :
+The `report` key contains a dictionary:
 
-```
-return {'idx': idx,
-        'key': self.keys[idx],
-        'report': report,
-        'img': img,
-        'label': label}
-```
+`dict_keys(['findings', 'impression', 'background', 'r2gen'])`
+
+The dataloader returns the following dictionary:
+`dict_keys(['idx', 'key', 'report', 'img', 'label])` 
+
+where key is a triple `(subject_id, study_id, image_id)`
+
+The different task coded for this dataset can be found in `BaseMimic.py`

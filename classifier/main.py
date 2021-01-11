@@ -71,7 +71,7 @@ if __name__ == '__main__':
                  'vector_folder': args.vector_folder}
 
     train_dset: BaseDataset = eval(args.dataset)('train', **data_args)
-    eval_dset: BaseDataset = eval(args.dataset)('validate', **data_args)
+    eval_dset: BaseDataset = eval(args.dataset)('val', **data_args)
     test_dset: BaseDataset = eval(args.dataset)('test', **data_args)
 
     train_loader = DataLoader(train_dset,

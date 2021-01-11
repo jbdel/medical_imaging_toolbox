@@ -6,13 +6,12 @@ This package is used to compute vector representations of a medical dataset repo
 
 To run a model, let's use:
 ```
-python -m linguistics.embeddings.main \
+python -m linguistics.embeddings.compute_embeddings \
     --model BioSentVec \
     --model_dir linguistics/embeddings/models  \
     --dataset MimicDataset  \
     --dataset_task binary  \
-    --save_vectors True \
-    --visualization t-SNE
+    --save_vectors True 
 ```
 where dataset argument takes a dataset from the package dataloaders 
 (see dedicated [README](https://github.com/jbdel/medical_imaging_toolbox/tree/main/dataloaders)).
