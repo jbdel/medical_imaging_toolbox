@@ -7,71 +7,82 @@ from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 import umap
 
-from .models import get_foward_function
-from .utils import get_output_dir, compute_embeddings
+from .utils import slugify
+from tqdm import tqdm
 from dataloaders import *
+from omegaconf import OmegaConf
+from .models import *
 
-parser = argparse.ArgumentParser()
-# Dataset
-parser.add_argument('--model', type=str, default='Bio_ClinicalBERT',
-                    choices=['Bio_ClinicalBERT', 'Doc2Vec', 'BioSentVec', 'BlueBERT', 'CNN'])
-parser.add_argument('--model_dir', type=str, default='linguistics/embeddings/models')
-parser.add_argument('--dataset', type=str, default="MimicDataset")
-parser.add_argument('--dataset_task', type=str, default="all")
-parser.add_argument('--task_binary', type=bool, default=False)
+if __name__ == '__main__':
 
-# Optional
-parser.add_argument('--name', type=str, default=None)
-parser.add_argument('--doc2vec_model', type=str, default=None)
-parser.add_argument('--cnn_model', type=str, default=None)
-parser.add_argument('--save_vectors', type=bool, default=False)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', type=str, default=None)
+    args = parser.parse_args()
+    cfg = OmegaConf.load(args.config)
 
-args = parser.parse_args()
+    # Create output directory
+    cfg.outdir = os.path.join(cfg.experiment.output_dir, cfg.experiment.name)
+    os.makedirs(os.path.join(cfg.outdir, "vectors"), exist_ok=True)
+    print('Output dir is', cfg.outdir)
 
-# Creating out_dir
-outdir = get_output_dir(args)
-os.makedirs(os.path.join(outdir, "vectors"), exist_ok=True)
-print('Output dir is', outdir)
+    # Getting model
+    model = eval(cfg.model.name)(cfg)
+    print('Using model', type(model).__name__)
 
-# Getting the forward function to compute embeddings
-model = get_foward_function(args)
+    for split in ["val", "test"]:
+        # Getting embeddings
+        print('Computing representations for split', split)
 
-# Getting embeddings according to given dataset
-for split in ["val", "test"]:
-    dataset: BaseDataset = eval(args.dataset)(split,
-                                              return_report=True,
-                                              return_label=True,
-                                              return_image=args.cnn_model is not None,
-                                              task=args.dataset_task)
-    dataset_name = type(dataset).__name__
+        dataset: BaseDataset = eval(cfg.dataset.name)(split,
+                                                      return_report=True,
+                                                      return_label=True,
+                                                      return_image=cfg.dataset.return_image is not None,
+                                                      task=cfg.dataset.task)
 
-    print('Computing representations for split', split)
-    vectors, labels = compute_embeddings(args, model, dataset, outdir, save_vectors=args.save_vectors)
+        vectors, labels = list(), list()
+        for sample in tqdm(dataset, total=len(dataset)):
+            label = sample['label']
+            vector = model(sample)
+            if cfg.experiment.save_vectors:
+                np.save(os.path.join(cfg.outdir,
+                                     "vectors",
+                                     slugify(sample['key'])
+                                     ), np.array(vector))
 
-    for visualization in [TSNE(n_components=2, n_jobs=4, verbose=0, n_iter=2000),
-                          umap.UMAP(n_neighbors=dataset.num_classes)
-                          ]:
+            # TODO we exclude multilabel samples for plotting, should we ?
+            if sum(label) > 1.0:
+                continue
 
-        visualization_name = type(visualization).__name__
-        print('Computing embeddings using', visualization_name)
-        embeddings = visualization.fit_transform(vectors)
+            c = np.where(label == 1.)[0][0]
+            labels.append(dataset.task_classes[c])
+            vectors.append(vector)
 
-        # Plotting
-        fig = plt.figure()
-        for g in np.unique(labels):
-            ix = np.where(labels == g)
-            plt.scatter(embeddings[ix, 0], embeddings[ix, 1], s=0.1,
-                        cmap='Spectral', label=g)
+        labels = np.array(labels)
+        vectors = np.array(vectors)
 
-        plt.legend(markerscale=10, loc='center left', bbox_to_anchor=(1, 0.5))
-        plt.title(args.model + ' ' + visualization_name)
-        plt.tight_layout()
-        fig.savefig(os.path.join(outdir, args.model
-                                 + '_'
-                                 + dataset_name
-                                 + '_'
-                                 + str(split)
-                                 + '_'
-                                 + visualization_name
-                                 + '.png'))
-        plt.close()
+        # Plotting visualization
+        for visualization in [TSNE(n_components=2, n_jobs=4, verbose=0, n_iter=2000),
+                              umap.UMAP(n_neighbors=dataset.num_classes)
+                              ]:
+
+            visualization_name = type(visualization).__name__
+            print('Computing embeddings using', visualization_name)
+            embeddings = visualization.fit_transform(vectors)
+
+            # Plotting
+            fig = plt.figure()
+            for g in np.unique(labels):
+                ix = np.where(labels == g)
+                plt.scatter(embeddings[ix, 0], embeddings[ix, 1], s=0.1,
+                            cmap='Spectral', label=g)
+
+            plt.legend(markerscale=10, loc='center left', bbox_to_anchor=(1, 0.5))
+            plt.title(cfg.model.name + ' ' + visualization_name)
+            plt.tight_layout()
+            fig.savefig(os.path.join(cfg.outdir, cfg.experiment.name
+                                     + '_'
+                                     + str(split)
+                                     + '_'
+                                     + visualization_name
+                                     + '.png'))
+            plt.close()

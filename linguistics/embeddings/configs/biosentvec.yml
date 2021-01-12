@@ -1,0 +1,13 @@
+model:
+    name: BioSentVec
+    checkpoint: linguistics/embeddings/checkpoints/BioSentVec_PubMed_MIMICIII-bigram_d700.bin
+    checkpoint_download: True
+dataset:
+    name: MimicDataset
+    task: six
+report:
+    report_policy: top_section
+experiment:
+    name: biosentvec_mimic_six
+    save_vectors: False
+    output_dir: linguistics/embeddings/output/

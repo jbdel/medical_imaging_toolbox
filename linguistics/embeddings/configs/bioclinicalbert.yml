@@ -1,0 +1,11 @@
+model:
+    name: BioClinicalBERT
+dataset:
+    name: MimicDataset
+    task: six
+report:
+    report_policy: top_section
+experiment:
+    name: bioclinicalbert_mimic_six
+    save_vectors: False
+    output_dir: linguistics/embeddings/output/

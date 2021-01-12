@@ -56,8 +56,7 @@ python -m linguistics.embeddings.compute_embeddings \
     --dataset MimicDataset  \
     --dataset_task six  \
     --cnn_model classifier/checkpoints/densenet169/best196.pkl  \
-    --name densenet169 \
-    --visualization t-SNE
+    --name densenet169 
 ```
 Every used model is defined in `model.py`
 

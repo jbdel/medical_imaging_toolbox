@@ -6,28 +6,17 @@ This package is used to compute vector representations of a medical dataset repo
 
 To run a model, let's use:
 ```
-python -m linguistics.embeddings.compute_embeddings \
-    --model BioSentVec \
-    --model_dir linguistics/embeddings/models  \
-    --dataset MimicDataset  \
-    --dataset_task binary  \
-    --save_vectors True 
+python -m linguistics.embeddings.compute_embeddings --config BioSentVec
 ```
-where dataset argument takes a dataset from the package dataloaders 
-(see dedicated [README](https://github.com/jbdel/medical_imaging_toolbox/tree/main/dataloaders)).
 
-The `dataset_task` argument defines how the task is configured. For example, we want to use all the label, or only binary, or regroup 
-some labels into clusters. Label trees can be defined as show 
-for the [MimicDataset](https://github.com/jbdel/medical_imaging_toolbox/tree/main/dataloaders/MimicDataset/BaseMimic.py).
-
-Vectors are created in `linguistics/embeddings/models/BioSentVec/vectors/` and t-SNE plots are dump 
-also (see `visualization` command):
+(see dedicated config folder for more examples)
+For any config, you can set save_vectors to True.
 
 <img src='https://i.imgur.com/tT7h3hb.png' width="400px" /><img src='https://i.imgur.com/XAr6uDH.png' width="400px" /><br/>
 <br/>
 <i>MimicDataset test-set and eval-set</i>
 
-Above is the results of t-SNE on the six-class variant (`--dataset_task six`) of MimicDataset.
+Above is the results of t-SNE on the six-class variant of MimicDataset.
 <p><b>classifier package</b></p>
 
 It is also possible to use the classifier package to run a model on any medical dataset. So far, only CNN are available. Use 

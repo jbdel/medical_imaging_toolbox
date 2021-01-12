@@ -7,6 +7,7 @@ import torchvision.transforms as transforms
 from tqdm import tqdm
 import pandas as pd
 import numpy as np
+from torch.utils.data import DataLoader
 
 data_root = './data/mimic-crx/'
 ann_file = 'annotations.json'
@@ -51,7 +52,7 @@ class MimicDataset(BaseMimic):
                 raise
 
         if self.return_report:
-            report = example['ground_truth']
+            report = example['report']
 
         if self.return_label:
             label = self.get_encoded_label(example['label'])
@@ -86,5 +87,7 @@ if __name__ == '__main__':
                      return_label=True,
                      return_report=True,
                      task='six')
-    for s in tqdm(d):
+    l = DataLoader(d,
+                   batch_size=2)
+    for s in tqdm(l):
         continue

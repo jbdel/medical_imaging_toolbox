@@ -1,0 +1,11 @@
+model:
+    name: CNN
+    checkpoint: classifier/checkpoints/densenet169/best196.pkl
+dataset:
+    name: MimicDataset
+    task: six
+    return_image: True
+experiment:
+    name: densenet169_mimic_six
+    save_vectors: False
+    output_dir: linguistics/embeddings/output/
