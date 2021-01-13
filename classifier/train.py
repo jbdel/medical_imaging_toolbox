@@ -3,61 +3,67 @@ import torch.nn as nn
 import numpy as np
 import time
 import os
+import sys
 from .utils import logwrite
-from .metrics.metrics import get_metrics
 import collections
+from omegaconf.dictconfig import DictConfig
 
 
-def train(net, losses_fn, train_loader, eval_loader, optimizer, scheduler, args, data_args, model_args):
-    logfile = open(
-        args.output + "/" + args.name +
-        '/log_run.txt',
-        'w+'
-    )
+def train(net, losses_fn, metrics_fn, train_loader, eval_loader, optimizer, scheduler, cfg):
+    logfile = open(os.path.join(cfg.checkpoint_dir, 'log_run.txt'), 'w+')
 
-    logwrite(logfile, str(args), to_print=False)
+    logwrite(logfile, str(cfg), to_print=False)
     logwrite(logfile, "Total number of parameters : " + str(sum([p.numel() for p in net.parameters()]) / 1e6) + "M")
 
-    args.no_improvement = 0
-    args.best_metric_value = 0.0
+    cfg.run = DictConfig({'no_improvements': 0,
+                          'current_epoch': 0,
+                          'early_stop': 0,
+                          'best_early_stop_metric': 0.0 if cfg.early_stop.higher_is_better else float('inf')})
+
+    scaler = torch.cuda.amp.GradScaler()
+
     loss_dict = dict()
     summary = ''
-    for epoch in range(0, args.epochs):
-        args.current_epoch = epoch
+    batch_size = cfg.hyperparameter.batch_size
+    for epoch in range(0, 9999):
+        cfg.run.current_epoch = epoch
         net.train()
         time_start = time.time()
         for step, sample in enumerate(train_loader):
             optimizer.zero_grad()
-            pred = net(sample)
+
+            with torch.cuda.amp.autocast():
+                pred = net(sample)
 
             losses = 0.0
-            for key in losses_fn.keys():
-                name, func, loss_args = losses_fn[key]
-                loss = func(pred[key], sample[key].cuda(), **loss_args)
+            for loss_fn in losses_fn:
+                loss = loss_fn(pred, sample)
                 losses += loss
-                loss_dict[name] = loss.cpu().data.numpy()
-            losses.backward()
+                loss_dict[type(loss_fn).__name__] = loss.item()
+            scaler.scale(losses).backward()
 
             # Gradient norm clipping
-            if args.grad_norm_clip > 0:
+            if cfg.hyperparameter.grad_norm_clip > 0:
                 nn.utils.clip_grad_norm_(
                     net.parameters(),
-                    args.grad_norm_clip
+                    cfg.hyperparameter.grad_norm_clip
                 )
 
-            optimizer.step()
+            scaler.step(optimizer)
+            scaler.update()
+
             summary = "\r[Epoch {}][Step {}/{}] Loss: {}, Lr: {}, ES: {}/{} ({}: {:.2f}) - {:.2f} m remaining".format(
-                args.current_epoch + 1,
+                cfg.run.current_epoch + 1,
                 step,
-                int(len(train_loader.dataset) / args.batch_size),
-                ["{}: {:.2f}".format(k, v / args.batch_size) for k, v in loss_dict.items()],
+                int(len(train_loader.dataset) / batch_size),
+                ["{}: {:.2f}".format(k, v / batch_size) for k, v in loss_dict.items()],
                 *[group['lr'] for group in optimizer.param_groups],
-                args.no_improvement,
-                args.early_stop,
-                args.early_stop_metric,
-                args.best_metric_value,
+                cfg.run.no_improvements,
+                cfg.early_stop.no_improvements,
+                cfg.early_stop.early_stop_metric,
+                cfg.run.best_early_stop_metric,
                 ((time.time() - time_start) / (step + 1)) * (
-                        (len(train_loader.dataset) / args.batch_size) - step) / 60,
+                        (len(train_loader.dataset) / batch_size) - step) / 60,
             )
             print(summary, end='          ')
 
@@ -66,64 +72,60 @@ def train(net, losses_fn, train_loader, eval_loader, optimizer, scheduler, args,
         print('Finished in {}s'.format(int(elapse_time)))
         logwrite(logfile, summary)
 
-        if epoch + 1 >= args.eval_start:
-            metrics = evaluate(net, losses_fn, eval_loader, args)
+        if epoch + 1 >= cfg.hyperparameter.eval_start:
+            metrics = evaluate(net, losses_fn, metrics_fn, eval_loader, cfg)
             logwrite(logfile, metrics)
-            metric_value = metrics[args.early_stop_metric]
-            args.no_improvement += 1
+            metric_value = metrics[cfg.early_stop.early_stop_metric]
+            cfg.run.no_improvements += 1
 
             # Best model beaten
-            if metric_value > args.best_metric_value:
+            if metric_value > cfg.run.best_early_stop_metric:
                 torch.save(
                     {
                         'state_dict': net.state_dict(),
                         'optimizer': optimizer.state_dict(),
-                        'args': args,
-                        'data_args': data_args,
-                        'model_args': model_args,
+                        'cfg': cfg,
+                        'model_name': type(net).__name__,
                         'metrics': metrics,
                     },
-                    args.output + "/" + args.name +
-                    '/best' + str(args.seed) + '.pkl'
+                    os.path.join(cfg.checkpoint_dir, 'best.pkl')
                 )
-                args.no_improvement = 0
-                args.best_metric_value = metric_value
+                cfg.run.no_improvements = 0
+                cfg.run.best_early_stop_metric = float(metric_value)
 
             # Scheduler
-            if args.use_scheduler:
-                scheduler.step(metrics[args.early_stop_metric])
+            if cfg.scheduler.use_scheduler:
+                scheduler.step(metrics[cfg.early_stop.early_stop_metric])
 
         # Early stop ?
-        if args.early_stop == args.no_improvement:
+        if cfg.run.no_improvements == cfg.early_stop.no_improvements:
             import sys
-            os.rename(args.output + "/" + args.name +
-                      '/best' + str(args.seed) + '.pkl',
-                      args.output + "/" + args.name +
-                      '/best' + str(args.seed) + '_' + str(args.best_metric_value) + '.pkl')
+            os.rename(os.path.join(cfg.checkpoint_dir, 'best.pkl'),
+                      os.path.join(cfg.checkpoint_dir, 'best' + str(cfg.run.best_early_stop_metric) + '.pkl'))
             print('Early stop reached')
             sys.exit()
 
 
-def evaluate(net, losses_fn, eval_loader, args):
+def evaluate(net, losses_fn, metrics_fn, eval_loader, cfg):
     print('Evaluation...')
     net.eval()
     with torch.no_grad():
         preds = collections.defaultdict(list)
-        labels = collections.defaultdict(list)
+        samples = collections.defaultdict(list)
 
         # Getting all prediction and labels
         for step, sample in enumerate(eval_loader):
             pred = net(sample)
-            for key in losses_fn.keys():
-                preds[key].append(pred[key].cpu().data.numpy())
-                labels[key].append(sample[key].cpu().data.numpy())
+            for k in pred.keys():
+                preds[k].extend(pred[k].cpu().data.numpy())
+                samples[k].extend(sample[k].data.numpy())
 
         metrics = dict()
-        for key in preds.keys():
-            name, _, _ = losses_fn[key]
-            pred = np.concatenate(preds[key])
-            label = np.concatenate(labels[key])
-            ret_metrics = get_metrics(losses_fn[key], pred, label, args, eval_loader)
-            metrics = {**metrics, **ret_metrics}
+        # calculating val_loss
+        for loss_fn in losses_fn:
+            metrics[type(loss_fn).__name__] = loss_fn(preds, samples).item()
+
+        for metric_fn in metrics_fn:
+            metrics = {**metrics, **metric_fn(preds, samples)}
 
     return metrics

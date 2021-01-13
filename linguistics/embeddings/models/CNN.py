@@ -26,15 +26,15 @@ class CNN(nn.Module):
         else:
             raise NotImplementedError
         self.fc = getattr(self.net.module.net, fc_name)
-        self.report_policy = ckpt['report_policy']
 
     def forward(self, sample):
-        vector = torch.zeros(self.fc.in_features)
+        with torch.no_grad():
+            vector = torch.zeros(self.fc.in_features)
 
-        def hook(m, i, o): vector.copy_(i[0].squeeze().data)
+            def hook(m, i, o): vector.copy_(i[0].squeeze().data)
 
-        self.fc.register_forward_hook(hook)
+            self.fc.register_forward_hook(hook)
 
-        sample['img'] = sample['img'].unsqueeze(0)
-        _ = self.net(sample)
-        return vector.cpu().data.numpy()
+            sample['img'] = sample['img'].unsqueeze(0)
+            _ = self.net(sample)
+            return vector.cpu().data.numpy()

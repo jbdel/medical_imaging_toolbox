@@ -89,5 +89,6 @@ if __name__ == '__main__':
                      task='six')
     l = DataLoader(d,
                    batch_size=2)
+    print(len(d))
     for s in tqdm(l):
         continue

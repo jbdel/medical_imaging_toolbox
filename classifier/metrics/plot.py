@@ -1,20 +1,18 @@
-import torch.nn.functional as F
-import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from itertools import cycle
 from scipy import interp
-from sklearn.metrics import roc_auc_score, roc_curve, auc
+from sklearn.metrics import auc
 import os
 
-######
-# Taken from https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html#sphx-glr-auto-examples-model-selection-plot-roc-py #
-#####
+
+# Taken from
+# https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html#sphx-glr-auto-examples-model-selection-plot-roc-py #
 
 # Plot ROC curves for the multilabel problem
-def plot_roc_multi(fpr, tpr, roc_auc, num_class, args, classes_name):
+def plot_roc_multi(fpr, tpr, roc_auc, num_class, cfg, classes_name):
     # Outdir
-    outdir = os.path.join(args.checkpoint_dir, 'plot_roc', 'epoch_' + str(args.current_epoch))
+    outdir = os.path.join(cfg.checkpoint_dir, 'plot_roc', 'epoch_' + str(cfg.run.current_epoch))
     os.makedirs(outdir, exist_ok=True)
 
     # First aggregate all false positive rates
@@ -61,10 +59,11 @@ def plot_roc_multi(fpr, tpr, roc_auc, num_class, args, classes_name):
     plt.savefig(os.path.join(outdir, "plot_roc_multiclass"))
     plt.close()
 
+
 # Plot of a ROC curve for a specific class
-def plot_roc(fpr, tpr, roc_auc, num_class, args, classes_name):
+def plot_roc(fpr, tpr, roc_auc, num_class, cfg, classes_name):
     # Outdir
-    outdir = os.path.join(args.checkpoint_dir, 'plot_roc', 'epoch_' + str(args.current_epoch))
+    outdir = os.path.join(cfg.checkpoint_dir, 'plot_roc', 'epoch_' + str(cfg.run.current_epoch))
     os.makedirs(outdir, exist_ok=True)
 
     plt.figure()
@@ -81,34 +80,3 @@ def plot_roc(fpr, tpr, roc_auc, num_class, args, classes_name):
     plt.legend(loc="lower right")
     plt.savefig(os.path.join(outdir, "plot_roc_" + str(num_class)))
     plt.close()
-
-
-# Get roc auc metrics
-def get_roc_auc(y_true, y_pred, args, eval_loader):
-    fpr = dict()
-    tpr = dict()
-    roc_auc = dict()
-    classes_name = eval_loader.dataset.task_classes
-    num_classes = eval_loader.dataset.num_classes
-
-    # Decision function
-    if num_classes == 2:
-        y_pred = F.softmax(torch.from_numpy(y_pred), dim=-1).numpy()
-    else:
-        y_pred = torch.sigmoid(torch.from_numpy(y_pred)).numpy()
-
-    roc_auc["macro"] = roc_auc_score(y_true, y_pred, average='macro')
-    roc_auc["micro"] = roc_auc_score(y_true, y_pred, average='micro')
-
-    # Per class auroc
-    for i in range(num_classes):
-        fpr[i], tpr[i], _ = roc_curve(y_true[:, i], y_pred[:, i])
-        auc_i = auc(fpr[i], tpr[i])
-        roc_auc['auc_' + str(i)] = auc_i
-        plot_roc(fpr[i], tpr[i], auc_i, i, args, classes_name)
-
-    # Plotting all classes
-    fpr["micro"], tpr["micro"], _ = roc_curve(y_true.ravel(), y_pred.ravel())
-    plot_roc_multi(fpr, tpr, roc_auc, num_classes, args, classes_name)
-
-    return roc_auc

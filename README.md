@@ -22,37 +22,8 @@ Above is the results of t-SNE on the six-class variant of MimicDataset.
 It is also possible to use the classifier package to run a model on any medical dataset. So far, only CNN are available. Use 
 the following command to train a model:
 
+To run a model on MimicDataset using a densenet backbone, use the following command
 ```
-python -m classifier.main \
-     --backbone densenet169 \
-     --name my_model \
-     --output classifier/checkpoints \
-     --dataset MimicDataset \
-     --dataset_task binary \
-     --losses classification \
-     --early_stop_metric f1_score_weighted \
-     --use_scheduler True \
-     --return_image True \
-     --return_label True 
+python -m classifier.main --config classifier/configs/cnn.yml
 ```
 
-Or you can constrain the CNN to fit the representation learned using the linguistic_embedding package:
-```
-python -m classifier.main \
- --backbone densenet169 \
- --name my_model \
- --output classifier/checkpoints \
- --dataset VectorMimicDataset \
- --losses classification cosine \
- --vector_size 700 \
- --vector_folder linguistics/embeddings/models/BioSentVec/vectors/ \
- --dataset_task binary \
- --return_image True \
- --return_label True 
-```
-
-You can also plot and save the vectors of any clssifier in the linguistic_embedding package
-
-<p><b>dataloaders package</b></p>
-
-So far is available the MimicDataset.
