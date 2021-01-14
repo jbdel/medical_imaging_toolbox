@@ -1,3 +1,6 @@
+To put in the data folder:
+https://drive.google.com/drive/folders/1pU97NrwdqG9raBm4aXx4gep2FfUFE_Rp?usp=sharing
+
 Python3.8
 <p><b>linguistic_embedding package</b></p>
 
