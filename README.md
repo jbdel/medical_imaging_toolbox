@@ -65,6 +65,7 @@ python -m classifier.main --config classifier/configs/cnn_constrained.yml
 
 <p><b>Make an experiment end to end</b></p>
 Using:
+
 ```
 python -m linguistics.embeddings.compute_embeddings --config doc2vec_train
 ```
@@ -80,3 +81,14 @@ You can then run a constrained cnn using
 python -m classifier.main --config classifier/configs/cnn_constrained.yml 
 ```
 (make sure that `vector_folder` is set to the right path in the config file)
+
+#TODO
+
+- Benchmark a baseline
+- Improve embeddings
+- Implement embeddings eval (of some sort)
+- retrain R2Gen
+- Incorporate VisualBert
+- Implement 'find nearest report' at test time
+- Implement GDRO
+- Publish a paper and get rich$$
