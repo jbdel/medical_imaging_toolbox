@@ -5,8 +5,8 @@ import torch
 
 
 class CNN(BaseModel):
-    def __init__(self, name, num_classes, pretrained=True, **kwargs):
-        super(CNN, self).__init__(num_classes)
+    def __init__(self, name, pretrained=True, **kwargs):
+        super(CNN, self).__init__(**kwargs)
         self.net = eval(name)(pretrained=pretrained)
 
         # Overriding classifier
@@ -32,8 +32,9 @@ class CNN(BaseModel):
 
 
 class CNNConstrained(CNN):
-    def __init__(self, name, num_classes, pretrained=True, vector_size=300, **kwargs):
-        super(CNNConstrained, self).__init__(name, num_classes, pretrained, **kwargs)
+    def __init__(self, vector_size, **kwargs):
+        super(CNNConstrained, self).__init__(**kwargs)
+        self.vector_size = 300
         setattr(self.net, self.fc_name, nn.Linear(self.in_features, vector_size))
         self.out = nn.Linear(vector_size, self.num_classes)
 

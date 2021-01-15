@@ -47,6 +47,8 @@ def get_report(report, policy=None):
                 return report[section]
     elif policy == 'top_section_MIT-LCP':
         for section in ['MIT-LCP_impression', 'MIT-LCP_findings', 'MIT-LCP_last_paragraph', 'MIT-LCP_comparison']:
+            if section not in report:
+                continue
             if report[section] != '':
                 return report[section]
     else:

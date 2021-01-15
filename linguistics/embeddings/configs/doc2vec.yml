@@ -5,8 +5,12 @@ dataset:
     name: MimicDataset
     task: six
 report:
-    report_policy: top_section
+    report_policy: top_section_MIT-LCP
 experiment:
-    name: doc2vec_mimic
-    save_vectors: True
+    name: doc2vec_mimic_50_mit
     output_dir: linguistics/embeddings/output/
+    save_vectors: True
+    plot_split:
+        - val
+        - test
+        - train

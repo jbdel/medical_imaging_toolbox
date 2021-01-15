@@ -29,7 +29,7 @@ if __name__ == '__main__':
     model = eval(cfg.model.name)(cfg)
     print('Using model', type(model).__name__)
 
-    for split in ["val", "test"]:
+    for split in cfg.experiment.plot_split:
         # Getting embeddings
         print('Computing representations for split', split)
 

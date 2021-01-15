@@ -5,12 +5,11 @@ import abc
 class BaseModel(nn.Module):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, num_classes=None):
+    def __init__(self, num_classes=None, **kwargs):
         assert num_classes is not None, 'BaseModel received None value'
         super().__init__()
         self.num_classes = num_classes
         self.forward_input_keys = ['input']
-
 
     @abc.abstractmethod
     def forward(self, sample) -> dict:

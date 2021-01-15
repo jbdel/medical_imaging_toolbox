@@ -1,14 +1,17 @@
 model: densenet169
 model_params:
   pretrained: True
-dataset: MimicDataset
+  vector_size: 768
+dataset: VectorMimicDataset
 dataset_params:
     task: six
     return_label: True
     return_image: True
     return_report: False
+    vector_folder: linguistics/embeddings/output/doc2vec_mimic_mit/vectors
 losses:
     - ClassificationLoss
+    - CosineLoss
 metrics:
     - ClassificationMetric
 metrics_params:
@@ -28,7 +31,7 @@ scheduler_params:
     threshold_mode: abs
 hyperparameter:
     lr_base: 1e-3
-    batch_size: 128
+    batch_size: 16
     pred_func: amax
     grad_norm_clip: -1
     eval_start: 1

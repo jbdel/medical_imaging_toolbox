@@ -9,7 +9,7 @@ from tqdm import tqdm
 class VectorMimicDataset(MimicDataset):
     def __init__(self, name, vector_folder, **kwargs):
         super(VectorMimicDataset, self).__init__(name, **kwargs)
-
+        assert vector_folder is not None
         self.vector_folder = vector_folder
 
     def __getitem__(self, idx):
@@ -21,8 +21,7 @@ class VectorMimicDataset(MimicDataset):
                                        )
             vector = np.load(vector_path)
         except FileNotFoundError:
-            print('Vector not found for key', vector_path)
-            raise FileNotFoundError
+            raise FileNotFoundError('Vector not found for key', vector_path)
 
         sample['vector'] = vector
 

@@ -7,5 +7,8 @@ report:
     report_policy: top_section
 experiment:
     name: bioclinicalbert_mimic_six
-    save_vectors: False
     output_dir: linguistics/embeddings/output/
+    save_vectors: False
+    plot_split:
+        - val
+        - test

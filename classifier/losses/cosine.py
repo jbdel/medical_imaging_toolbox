@@ -6,7 +6,7 @@ class CosineLoss(nn.Module):
     def __init__(self, cfg):
         super(CosineLoss, self).__init__()
         self.func = nn.CosineEmbeddingLoss(reduction="sum")
-        self.key = 'cosine'
+        self.key = 'vector'
 
     def forward(self, input, target):
         input, target = input[self.key], target[self.key]

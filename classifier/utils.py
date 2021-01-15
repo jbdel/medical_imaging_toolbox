@@ -17,7 +17,7 @@ def get_metrics(cfg):
 
 
 def get_model(cfg):
-    if 'cosine' in cfg.losses and ('resnet' in cfg.model or 'densenet' in cfg.model):
+    if 'CosineLoss' in cfg.losses and ('resnet' in cfg.model or 'densenet' in cfg.model):
         return CNNConstrained
     elif 'resnet' in cfg.model or 'densenet' in cfg.model:
         return CNN
