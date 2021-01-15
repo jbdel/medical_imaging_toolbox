@@ -6,7 +6,7 @@ dataset:
     name: MimicDataset
     task: six
 report:
-    report_policy: top_section
+    report_policy: top_section_MIT-LCP
 experiment:
     name: biosentvec_mimic_six
     save_vectors: False

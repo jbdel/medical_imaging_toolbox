@@ -27,7 +27,7 @@ scheduler_params:
     threshold_mode: abs
 hyperparameter:
     lr_base: 1e-3
-    batch_size: 16
+    batch_size: 128
     pred_func: amax
     grad_norm_clip: -1
     eval_start: 1

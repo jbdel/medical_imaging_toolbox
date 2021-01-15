@@ -5,6 +5,7 @@ model:
     epochs: 100
 dataset:
     name: MimicDataset
+    task: six
 report:
     report_policy: top_section
 experiment:

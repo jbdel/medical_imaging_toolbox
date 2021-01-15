@@ -12,6 +12,11 @@ To run a model, let's use:
 python -m linguistics.embeddings.compute_embeddings --config BioSentVec
 ```
 
+To train doc2vec, use:
+```
+python -m linguistics.embeddings.compute_embeddings --config doc2vec_train
+```
+
 (see dedicated config folder for more examples)
 For any config, you can set save_vectors to True.
 
