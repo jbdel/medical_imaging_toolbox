@@ -41,12 +41,12 @@ This package is used to compute vector representations of a medical dataset repo
 
 To run a model, let's use:
 ```
-python -m linguistics.embeddings.compute_embeddings --config BioSentVec
+python -m linguistics.embeddings.compute_embeddings --config linguistics/embeddings/configs/biosentvec.yml
 ```
 
 To train doc2vec, use:
 ```
-python -m linguistics.embeddings.compute_embeddings --config doc2vec_train
+python -m linguistics.embeddings.compute_embeddings --config linguistics/embeddings/configs/doc2vec_train.yml
 ```
 
 <p><b>classifier package</b></p>
@@ -67,7 +67,7 @@ python -m classifier.main --config classifier/configs/cnn_constrained.yml
 Using:
 
 ```
-python -m linguistics.embeddings.compute_embeddings --config doc2vec_train
+python -m linguistics.embeddings.compute_embeddings --config linguistics/embeddings/configs/doc2vec_train.yml
 ```
 will train a doc2vec model with the MIT-LCP sections using the top_section_MIT-LCP policy 
 (see linguistics/embeddings/utils.py for more information).
