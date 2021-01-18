@@ -10,9 +10,18 @@ Next, activate the environment:
 source envs/medical_toolbox/bin/activate
 ```
 
-Finally, install all the necessary modules:
+Install all the necessary modules:
 ```
 python -m pip install -r requirements.txt
+```
+
+Finally, install sent2vec from their github page:
+```
+https://github.com/epfml/sent2vec
+```
+Note: on Mac it was necessary to add a MACOSX_DEPLOYMENT_TARGET flag when running pip install, as follows:
+```
+MACOSX_DEPLOYMENT_TARGET=10.14 pip install . (assuming you are in the sent2vec folder cloned from the GitHub)
 ```
 
 <b>Mimic-crx</b>
