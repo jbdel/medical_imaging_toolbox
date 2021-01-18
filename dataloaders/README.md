@@ -6,7 +6,7 @@ defines the unique identifier of the sample.
 The rest is up to the dataset data.
 
 <b>```MimicDataset.py```</b> <br/>
-[Download annotations.json](http://)
+[Download annotations.json](https://drive.google.com/drive/folders/1pU97NrwdqG9raBm4aXx4gep2FfUFE_Rp?usp=sharing)
 
 Loads `annotations.json` containing examples. An example is described by:
 
@@ -21,4 +21,4 @@ The dataloader returns the following dictionary:
 
 where key is a triple `(subject_id, study_id, image_id)`
 
-The different task coded for this dataset can be found in `BaseMimic.py`
+The different tasks coded for this dataset can be found in `BaseMimic.py`

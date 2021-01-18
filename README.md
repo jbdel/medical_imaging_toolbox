@@ -17,9 +17,9 @@ python -m pip install -r requirements.txt
 
 <b>Mimic-crx</b>
 
-To put in the data/mimic-crx folder, images and annotations.json from [here](https://drive.google.com/drive/folders/1pU97NrwdqG9raBm4aXx4gep2FfUFE_Rp?usp=sharing)
+The data used in this project. Please put all the files into a folder called data/mimic-crx. Download the images and annotations (stored in an annotations.json file) [here](https://drive.google.com/drive/folders/1pU97NrwdqG9raBm4aXx4gep2FfUFE_Rp?usp=sharing)
 
-annotations.json contains all dataset informations:
+annotations.json contains all the information for a given piece of data and is divided up into train, test and validation splits:
 ```
 {"val":
      [{'id': str,
@@ -28,12 +28,12 @@ annotations.json contains all dataset informations:
        'image_path': str,
        'split': str,
        'label': list,
-       'report'dict}, ...],
+       'report': dict[see below]}, ...],
  "train": [{...}, ...],
  "test": [{...}, ...]
  }
 ```
-The report key for each sample is a dictionary:
+The report dictionary contains the following information:
 ```
 {'findings': str,
  'impression': str,
@@ -42,12 +42,11 @@ The report key for each sample is a dictionary:
  'MIT-LCP_impression': str,
  'MIT-LCP_last_paragraph': str,
  'MIT-LCP_comparison': str,
- 'r2gen'str}
+ 'r2gen': str}
 ```
-findings, impression and background are extracted from [here](https://github.com/abachaa/MEDIQA2021/tree/main/Task3)
+findings, impression and background were extracted from [here](https://github.com/abachaa/MEDIQA2021/tree/main/Task3)
 
-MIT-LCP are extracted from physionet official account ([MIT Laboratory for Computational Physiology](https://github.com/MIT-LCP/mimic-cxr/tree/master/txt)).
-These ones seems to work best.
+MIT-LCP information was extracted from physionet official account ([MIT Laboratory for Computational Physiology](https://github.com/MIT-LCP/mimic-cxr/tree/master/txt)). These seemed to work best in our initial experiments, however we have provided the original MIMIC findings, impression and background as well.
 
 R2gen is the ouput of the transformer module. This one might need retraining.
 
