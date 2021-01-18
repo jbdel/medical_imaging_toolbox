@@ -1,3 +1,20 @@
+<b>Setting up environment</b>
+
+Make sure you are in the top-level directory. Create a virtual environment by running the following command:
+```
+python3 -m venv envs/medical_toolbox
+```
+
+Next, activate the environment:
+```
+source envs/medical_toolbox/bin/activate
+```
+
+Finally, install all the necessary modules:
+```
+python -m pip install -r requirements.txt
+```
+
 <b>Mimic-crx</b>
 
 To put in the data/mimic-crx folder, images and annotations.json from [here](https://drive.google.com/drive/folders/1pU97NrwdqG9raBm4aXx4gep2FfUFE_Rp?usp=sharing)
