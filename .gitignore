@@ -3,3 +3,6 @@ data/
 *.png
 *.npy
 *cmd*
+.idea
+classifier/checkpoints/
+incremental/
