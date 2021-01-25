@@ -1,4 +1,5 @@
 data/
+envs/
 *.pyc
 *.png
 *.npy
