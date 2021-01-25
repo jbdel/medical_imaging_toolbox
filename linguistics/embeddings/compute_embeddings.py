@@ -2,10 +2,12 @@ import sys
 import os
 import argparse
 
+from collections import defaultdict
 import numpy as np
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 import umap
+import json
 
 from .utils import slugify
 from tqdm import tqdm
@@ -22,14 +24,15 @@ if __name__ == '__main__':
 
     # Create output directory
     cfg.outdir = os.path.join(cfg.experiment.output_dir, cfg.experiment.name)
-    os.makedirs(os.path.join(cfg.outdir, "vectors"), exist_ok=True)
+    os.makedirs(cfg.outdir, exist_ok=True)
     print('Output dir is', cfg.outdir)
 
     # Getting model
     model = eval(cfg.model.name)(cfg)
     print('Using model', type(model).__name__)
 
-    for split in cfg.experiment.plot_split:
+    vectors = defaultdict(dict)
+    for split in cfg.experiment.do_split:
         # Getting embeddings
         print('Computing representations for split', split)
 
@@ -39,15 +42,14 @@ if __name__ == '__main__':
                                                       return_image=cfg.dataset.return_image is not None,
                                                       task=cfg.dataset.task)
 
-        vectors, labels = list(), list()
+        embeddings, labels = list(), list()
         for sample in tqdm(dataset, total=len(dataset)):
             label = sample['label']
             vector = model(sample)
+
             if cfg.experiment.save_vectors:
-                np.save(os.path.join(cfg.outdir,
-                                     "vectors",
-                                     slugify(sample['key'])
-                                     ), np.array(vector))
+                key = sample['key']
+                vectors[split][key] = np.array(vector)
 
             # TODO we exclude multilabel samples for plotting, should we ?
             if sum(label) > 1.0:
@@ -55,10 +57,13 @@ if __name__ == '__main__':
 
             c = np.where(label == 1.)[0][0]
             labels.append(dataset.task_classes[c])
-            vectors.append(vector)
+            embeddings.append(vector)
 
         labels = np.array(labels)
-        vectors = np.array(vectors)
+        embeddings = np.array(embeddings)
+
+        if cfg.experiment.save_vectors:  # if we save vectors, dont care of plotting
+            continue
 
         # Plotting visualization
         for visualization in [TSNE(n_components=2, n_jobs=4, verbose=0, n_iter=2000),
@@ -67,7 +72,7 @@ if __name__ == '__main__':
 
             visualization_name = type(visualization).__name__
             print('Computing embeddings using', visualization_name)
-            embeddings = visualization.fit_transform(vectors)
+            embeddings = visualization.fit_transform(embeddings)
 
             # Plotting
             fig = plt.figure()
@@ -86,3 +91,8 @@ if __name__ == '__main__':
                                      + visualization_name
                                      + '.png'))
             plt.close()
+
+    if cfg.experiment.save_vectors:
+        import pickle
+
+        pickle.dump(vectors, open(os.path.join(cfg.outdir, 'vectors.pkl'), 'wb'))

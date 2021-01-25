@@ -12,7 +12,7 @@ experiment:
     name: doc2vec_mimic_mit
     output_dir: linguistics/embeddings/output/
     save_vectors: True
-    plot_split:
+    do_split:
         - val
         - test
         - train

@@ -20,8 +20,6 @@ class CNN(BaseModel):
         self.in_features = getattr(self.net, self.fc_name).in_features
         setattr(self.net, self.fc_name, nn.Linear(self.in_features, self.num_classes))
 
-        self.forward_input_keys = ['img']
-
     def forward(self, sample):
         input = sample['img']
         return {'label': self.net(input.cuda())}
@@ -30,11 +28,13 @@ class CNN(BaseModel):
         output = self.forward({'img': torch.zeros(1, 3, 224, 224)})
         return output.keys()
 
+    def get_forward_input_keys(self):
+        return ['img']
+
 
 class CNNConstrained(CNN):
     def __init__(self, vector_size, **kwargs):
         super(CNNConstrained, self).__init__(**kwargs)
-        self.vector_size = 300
         setattr(self.net, self.fc_name, nn.Linear(self.in_features, vector_size))
         self.out = nn.Linear(vector_size, self.num_classes)
 

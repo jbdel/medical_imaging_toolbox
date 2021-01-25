@@ -1,23 +1,25 @@
 import torch.nn as nn
 import numpy as np
 import torch
+import abc
 
 
 class BaseMetric(nn.Module):
-    def __init__(self, cfg, key='key'):
+    __metaclass__ = abc.ABC
+
+    def __init__(self, cfg, **kwargs):
         super(BaseMetric, self).__init__()
-        self.key = key
         self.cfg = cfg
 
     def forward(self, input, target):
         assert isinstance(input, dict), 'input is not a dictionary'
-        assert isinstance(target, dict), 'input is not a dictionary'
+        assert isinstance(target, dict), 'target is not a dictionary'
 
-        input, target = input[self.key], target[self.key]
-
-        if isinstance(input, (list)):
-            input = np.array(input)
-        if isinstance(target, (list)):
-            target = np.array(target)
+        input = {k: np.array(v) for k, v in input.items()}
+        target = {k: np.array(v) for k, v in target.items()}
 
         return input, target
+
+    @abc.abstractmethod
+    def get_required_keys(self):
+        raise NotImplementedError('users must define get_required_keys to use this base class')

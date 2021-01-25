@@ -6,11 +6,13 @@ from .plot import plot_roc, plot_roc_multi
 from .basemetric import BaseMetric
 from sklearn.metrics import f1_score
 from sklearn.metrics import classification_report
+from sklearn.metrics import accuracy_score
 
 
 class ClassificationMetric(BaseMetric):
-    def __init__(self, cfg, decision_function='sigmoid'):
-        super(ClassificationMetric, self).__init__(cfg, key='label')
+    def __init__(self, cfg, decision_function=None, **kwargs):
+        super(ClassificationMetric, self).__init__(cfg, **kwargs)
+        assert decision_function is not None, 'decision_function is None'
         self.decision_function = decision_function
 
         # Getting logit function and prediction function from decision param
@@ -25,22 +27,30 @@ class ClassificationMetric(BaseMetric):
 
     def forward(self, input, target):
         input, target = super().forward(input, target)
-        # AUC
+        input, target = input['label'], target['label']
+
         roc_auc = self.get_roc_auc(target, input)
         accuracy_f1 = self.accuracy_f1(target, input)
+
         return {**accuracy_f1, **roc_auc}
+
+    def get_required_keys(self):
+        return ['label']
 
     def accuracy_f1(self, y_true, y_pred):
         metrics = dict()
         y_pred = self.pred_fn(y_pred)
         y_true = self.pred_fn(y_true)
 
-        metrics['accuracy'] = np.mean(y_pred == y_true)
+        metrics['accuracy'] = accuracy_score(y_true, y_pred)
         metrics['f1_score'] = f1_score(y_true, y_pred, average=None)
         metrics['f1_score_weighted'] = f1_score(y_true, y_pred, average='weighted')
         metrics['f1_score_macro'] = f1_score(y_true, y_pred, average='macro')
-        metrics['classification_report'] = classification_report(y_true, y_pred,
-                                                                 target_names=self.cfg.dataset_params.task_classes)
+        metrics['classification_report_string'] = classification_report(y_true, y_pred,
+                                                                        target_names=self.cfg.dataset_params.task_classes)
+        metrics['classification_report_dict'] = classification_report(y_true, y_pred,
+                                                                      target_names=self.cfg.dataset_params.task_classes,
+                                                                      output_dict=True)
         return metrics
 
     def get_roc_auc(self, y_true, y_pred):

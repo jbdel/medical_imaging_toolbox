@@ -9,7 +9,6 @@ class BaseModel(nn.Module):
         assert num_classes is not None, 'BaseModel received None value'
         super().__init__()
         self.num_classes = num_classes
-        self.forward_input_keys = ['input']
 
     @abc.abstractmethod
     def forward(self, sample) -> dict:
@@ -19,4 +18,10 @@ class BaseModel(nn.Module):
     @abc.abstractmethod
     def get_forward_output_keys(self) -> list:
         """return the keys of the dict returned by forward, must implement"""
-        raise NotImplementedError('users must define get_forward_keys to use this base class')
+        raise NotImplementedError('users must define get_forward_output_keys to use this base class')
+
+    @abc.abstractmethod
+    def get_forward_input_keys(self) -> list:
+        """return the keys of the dict needed by forward, must implement"""
+        raise NotImplementedError('users must define get_forward_input_keys to use this base class')
+

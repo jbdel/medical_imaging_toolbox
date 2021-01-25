@@ -84,8 +84,8 @@ def train(net, losses_fn, metrics_fn, train_loader, eval_loader, optimizer, sche
                     {
                         'state_dict': net.state_dict(),
                         'optimizer': optimizer.state_dict(),
+                        'scheduler': scheduler.state_dict(),
                         'cfg': cfg,
-                        'model_name': type(net).__name__,
                         'metrics': metrics,
                     },
                     os.path.join(cfg.checkpoint_dir, 'best.pkl')

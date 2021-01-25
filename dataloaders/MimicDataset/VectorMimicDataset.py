@@ -4,32 +4,29 @@ import numpy as np
 from .MimicDataset import MimicDataset
 from linguistics.embeddings.utils import slugify
 from tqdm import tqdm
+import pickle
 
 
 class VectorMimicDataset(MimicDataset):
-    def __init__(self, name, vector_folder, **kwargs):
-        super(VectorMimicDataset, self).__init__(name, **kwargs)
-        assert vector_folder is not None
-        self.vector_folder = vector_folder
+    def __init__(self, split, vector_file=None, **kwargs):
+        super(VectorMimicDataset, self).__init__(split, **kwargs)
+        assert vector_file is not None
+        self.vectors = pickle.load(open(vector_file, 'rb'))[split]
 
     def __getitem__(self, idx):
         sample = super().__getitem__(idx)
-        subject_id, study_id, _ = sample['key']
+        key = sample['key']
         try:
-            vector_path = os.path.join(self.vector_folder,
-                                       slugify(sample['key']) + '.npy'
-                                       )
-            vector = np.load(vector_path)
-        except FileNotFoundError:
-            raise FileNotFoundError('Vector not found for key', vector_path)
+            vector = self.vectors[key]
+        except KeyError:
+            raise KeyError(key)
 
         sample['vector'] = vector
-
         return sample
 
 
 if __name__ == '__main__':
-    d = VectorMimicDataset("test", "vector_folder",
+    d = VectorMimicDataset("test", "vector_file",
                            return_image=True,
                            return_label=True,
                            return_report=True)

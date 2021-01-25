@@ -7,9 +7,10 @@ from dataloaders import *
 from torch.optim.lr_scheduler import *
 import torch.optim as optim
 from torch.utils.data import DataLoader
+from omegaconf.dictconfig import DictConfig
 
 from .train import train
-from .utils import get_losses_fn, get_model, get_metrics
+from .utils import get_losses_fn, get_model, get_metrics, flatten
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -35,9 +36,10 @@ if __name__ == '__main__':
 
     eval_loader = DataLoader(eval_dset,
                              int(cfg.hyperparameter.batch_size / 2),
+                             shuffle=False,
                              num_workers=n_gpus * 4,
                              pin_memory=True)
-
+    test_loader = None
     # test_loader = DataLoader(test_dset,
     #                          int(cfg.hyperparameter.batch_size / 2),
     #                          num_workers=n_gpus * 4,
@@ -55,23 +57,27 @@ if __name__ == '__main__':
     }, cfg.model_params)
 
     net = net_func(**cfg.model_params).cuda()
-    print('Using network', type(net).__name__, 'with input', net.forward_input_keys, 'returning',
+    print('Using model', type(net).__name__, 'with input', net.get_forward_input_keys(), 'returning',
           net.get_forward_output_keys(), 'with', net.num_classes,
           'output neurons')
 
     # Losses
     losses_fn = get_losses_fn(cfg)
+    loss_required_keys = set(flatten([loss.get_required_keys() for loss in losses_fn]))
     print('Using losses', [type(loss).__name__ for loss in losses_fn], "needing the model to return",
-          [loss.key for loss in losses_fn])
+          loss_required_keys)
 
     # Metrics
     metrics_fn = get_metrics(cfg)
+    metrics_required_keys = set(flatten([metric.get_required_keys() for metric in metrics_fn]))
     print('Using metrics', [type(metric).__name__ for metric in metrics_fn], "needing the model to return",
-          [metric.key for metric in metrics_fn])
+          metrics_required_keys)
 
     # Checking configs OK
-    assert set(net.get_forward_output_keys()) == set([loss.key for loss in losses_fn]), 'Losses and model dont match'
-    assert all([key in dataset_keys for key in net.forward_input_keys]), 'Model and dataset dont match'
+    assert all([key in dataset_keys for key in net.get_forward_input_keys()]), 'Dataset and Model keys dont match'
+    assert all([key in net.get_forward_output_keys() for key in loss_required_keys]), 'Losses and Model keys dont match'
+    assert all(
+        [key in net.get_forward_output_keys() for key in metrics_required_keys]), 'Metrics and Model keys dont match'
     print('Everything matches')
 
     # Create Checkpoint dir
@@ -88,6 +94,18 @@ if __name__ == '__main__':
 
     net = nn.DataParallel(net)
     print("Let's use", torch.cuda.device_count(), "GPUs!")
+
+    # # Keeping all objects in cfg
+    # cfg.objects = DictConfig({'train_dset': train_dset,
+    #                           'eval_dset': eval_dset,
+    #                           'test_dset': test_dset,
+    #                           'net': net,
+    #                           'losses_fn': losses_fn,
+    #                           'metrics_fn': metrics_fn,
+    #                           'optimizer': optimizer,
+    #                           'scheduler': scheduler,
+    #                           })
+
     # Run training
     eval_accuracies = train(net,
                             losses_fn,

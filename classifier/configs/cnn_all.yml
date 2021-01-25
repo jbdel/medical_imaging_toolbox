@@ -1,17 +1,14 @@
 model: densenet169
 model_params:
   pretrained: True
-  vector_size: 768
-dataset: VectorMimicDataset
+dataset: MimicDataset
 dataset_params:
-    task: six
+    task: all
     return_label: True
     return_image: True
     return_report: False
-    vector_file: linguistics/embeddings/output/doc2vec_mimic_mit/vectors.pkl
 losses:
     - ClassificationLoss
-    - CosineLoss
 metrics:
     - ClassificationMetric
 metrics_params:
@@ -35,5 +32,5 @@ hyperparameter:
     grad_norm_clip: -1
     eval_start: 1
 experiment:
-    name: my_model_constrained
+    name: my_model_all
     output_dir: classifier/checkpoints

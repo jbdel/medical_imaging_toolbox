@@ -15,7 +15,7 @@ metrics_params:
     decision_function: sigmoid
 early_stop:
     early_stop_metric: f1_score_weighted
-    no_improvements: 10
+    no_improvements: 5
     higher_is_better: True
 scheduler:
     use_scheduler: True
@@ -28,8 +28,7 @@ scheduler_params:
     threshold_mode: abs
 hyperparameter:
     lr_base: 1e-3
-    batch_size: 128
-    pred_func: amax
+    batch_size: 64
     grad_norm_clip: -1
     eval_start: 1
 experiment:

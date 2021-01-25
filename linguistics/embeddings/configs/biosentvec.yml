@@ -11,6 +11,6 @@ experiment:
     name: biosentvec_mimic_six
     output_dir: linguistics/embeddings/output/
     save_vectors: False
-    plot_split:
+    do_split:
         - val
         - test

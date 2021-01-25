@@ -7,16 +7,16 @@ from tqdm import tqdm
 
 
 class VectorMimicDataset(MimicDataset):
-    def __init__(self, name, vector_folder, **kwargs):
+    def __init__(self, name, vector_file, **kwargs):
         super(VectorMimicDataset, self).__init__(name, **kwargs)
-        assert vector_folder is not None
-        self.vector_folder = vector_folder
+        assert vector_file is not None
+        self.vector_file = vector_file
 
     def __getitem__(self, idx):
         sample = super().__getitem__(idx)
         subject_id, study_id, _ = sample['key']
         try:
-            vector_path = os.path.join(self.vector_folder,
+            vector_path = os.path.join(self.vector_file,
                                        slugify(sample['key']) + '.npy'
                                        )
             vector = np.load(vector_path)
@@ -29,7 +29,7 @@ class VectorMimicDataset(MimicDataset):
 
 
 if __name__ == '__main__':
-    d = VectorMimicDataset("test", "vector_folder",
+    d = VectorMimicDataset("test", "vector_file",
                            return_image=True,
                            return_label=True,
                            return_report=True)

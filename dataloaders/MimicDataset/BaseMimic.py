@@ -1,9 +1,8 @@
 import numpy as np
-from abc import ABC
 from dataloaders.BaseDataset import BaseDataset
 
 
-class BaseMimic(BaseDataset, ABC):
+class BaseMimic(BaseDataset):
     def __init__(self, task):
         super().__init__(task)
 
@@ -28,9 +27,9 @@ class BaseMimic(BaseDataset, ABC):
             return {'No Finding': {'No Finding'},
                     'Support Devices': {'Support Devices'},
                     'Fracture': {'Fracture'},
-                    'Lung Opacity': {'Lung Opacity', 'Edema', 'Consolidation', 'Pneumonia', 'Lung Lesion',
-                                     'Atelectasis'},
-                    'Enlarged Cardiomediastinum': {'Enlarged Cardiomediastinum', 'Cardiomegaly'},
+                    'Lung': {'Lung Opacity', 'Edema', 'Consolidation', 'Pneumonia', 'Lung Lesion',
+                             'Atelectasis'},
+                    'Cardio': {'Enlarged Cardiomediastinum', 'Cardiomegaly'},
                     'Pleural': {'Pleural Other', 'Pleural Effusion', 'Pneumothorax'}
                     }
 

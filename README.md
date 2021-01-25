@@ -80,7 +80,7 @@ You can then run a constrained cnn using
 ```
 python -m classifier.main --config classifier/configs/cnn_constrained.yml 
 ```
-(make sure that `vector_folder` is set to the right path in the config file)
+(make sure that `vector_file` is set to the right path in the config file)
 
 #TODO
 
