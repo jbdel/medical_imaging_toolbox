@@ -1,5 +1,4 @@
-import argparse, os, random
-import numpy as np
+import argparse, os, sys
 import torch
 import torch.nn as nn
 from omegaconf import OmegaConf
@@ -7,16 +6,30 @@ from dataloaders import *
 from torch.optim.lr_scheduler import *
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from omegaconf.dictconfig import DictConfig
 
-from .train import train
+from .train import train, evaluate
 from .utils import get_losses_fn, get_model, get_metrics, flatten
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default=None)
+    parser.add_argument('--ckpt', type=str, default=None)
+    parser.add_argument('-o', help="Overriding arguments", nargs='+', default=[])
+
     args = parser.parse_args()
-    cfg = OmegaConf.load(args.config)
+
+    if args.ckpt is not None:
+        ckpt = torch.load(args.ckpt)
+        config = ckpt['cfg']
+    else:
+        config = OmegaConf.load(args.config)
+
+    override = OmegaConf.from_dotlist(args.o)
+    if override:
+        print('Overriding dict:', override)
+
+    cfg = OmegaConf.merge(config, override)
+
     torch.backends.cudnn.benchmark = True
 
     # DataLoader
@@ -95,6 +108,25 @@ if __name__ == '__main__':
     net = nn.DataParallel(net)
     print("Let's use", torch.cuda.device_count(), "GPUs!")
 
+    if args.ckpt is None:
+        # Run training
+        eval_accuracies = train(net,
+                                losses_fn,
+                                metrics_fn,
+                                train_loader,
+                                eval_loader,
+                                optimizer,
+                                scheduler,
+                                cfg,
+                                )
+    else:
+        net.load_state_dict(ckpt['state_dict'])
+        metrics = evaluate(net, losses_fn, metrics_fn, eval_loader, cfg)
+        for k, v in metrics.items():
+            if 'dict' in k:
+                continue
+            print("'{}':{}".format(k, v))
+
     # # Keeping all objects in cfg
     # cfg.objects = DictConfig({'train_dset': train_dset,
     #                           'eval_dset': eval_dset,
@@ -105,14 +137,3 @@ if __name__ == '__main__':
     #                           'optimizer': optimizer,
     #                           'scheduler': scheduler,
     #                           })
-
-    # Run training
-    eval_accuracies = train(net,
-                            losses_fn,
-                            metrics_fn,
-                            train_loader,
-                            eval_loader,
-                            optimizer,
-                            scheduler,
-                            cfg,
-                            )

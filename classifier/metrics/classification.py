@@ -59,6 +59,10 @@ class ClassificationMetric(BaseMetric):
         roc_auc = dict()
         task_classes = self.cfg.dataset_params.task_classes
         num_classes = self.cfg.dataset_params.num_classes
+        if self.cfg.run is None:
+            current_epoch = "eval"
+        else:
+            current_epoch = self.cfg.run.current_epoch
 
         # Getting logits from decision function
         y_pred = self.logit_fn(y_pred)
@@ -71,10 +75,10 @@ class ClassificationMetric(BaseMetric):
             fpr[i], tpr[i], _ = roc_curve(y_true[:, i], y_pred[:, i])
             auc_i = auc(fpr[i], tpr[i])
             roc_auc['auc_' + str(i)] = auc_i
-            plot_roc(fpr[i], tpr[i], auc_i, i, self.cfg, task_classes)
+            plot_roc(fpr[i], tpr[i], auc_i, i, self.cfg, task_classes, current_epoch)
 
         # Plotting all classes
         fpr["micro"], tpr["micro"], _ = roc_curve(y_true.ravel(), y_pred.ravel())
-        plot_roc_multi(fpr, tpr, roc_auc, num_classes, self.cfg, task_classes)
+        plot_roc_multi(fpr, tpr, roc_auc, num_classes, self.cfg, task_classes, current_epoch)
 
         return roc_auc

@@ -9,10 +9,6 @@ import pandas as pd
 import numpy as np
 from torch.utils.data import DataLoader
 
-data_root = './data/mimic-crx/'
-ann_file = 'annotations.json'
-image_root = 'images'
-
 
 class MimicDataset(BaseMimic):
     def __init__(self, split, return_image=False, return_label=False, return_report=False, task='all', **kwargs):
@@ -25,7 +21,7 @@ class MimicDataset(BaseMimic):
         self.return_label = return_label
         self.transform = MimicDataset.get_transforms(split)
 
-        self.ann = json.loads(open(os.path.join(data_root, ann_file), 'r').read())
+        self.ann = json.loads(open(os.path.join(self.data_root, self.ann_file), 'r').read())
         self.examples = self.ann[split]
 
     def __len__(self):
@@ -46,7 +42,7 @@ class MimicDataset(BaseMimic):
         if self.return_image:
             image_path = example['image_path']
             try:
-                image = self.transform(Image.open(os.path.join(data_root, image_root, image_path)).convert('RGB'))
+                image = self.transform(Image.open(os.path.join(self.data_root, self.image_root, image_path)).convert('RGB'))
             except FileNotFoundError:
                 print('image not found for key', image_path)
                 raise

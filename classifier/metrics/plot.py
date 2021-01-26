@@ -10,9 +10,9 @@ import os
 # https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html#sphx-glr-auto-examples-model-selection-plot-roc-py #
 
 # Plot ROC curves for the multilabel problem
-def plot_roc_multi(fpr, tpr, roc_auc, num_class, cfg, classes_name):
+def plot_roc_multi(fpr, tpr, roc_auc, num_class, cfg, classes_name, current_epoch):
     # Outdir
-    outdir = os.path.join(cfg.checkpoint_dir, 'plot_roc', 'epoch_' + str(cfg.run.current_epoch))
+    outdir = os.path.join(cfg.checkpoint_dir, 'plot_roc', 'epoch_' + str(current_epoch))
     os.makedirs(outdir, exist_ok=True)
 
     # First aggregate all false positive rates
@@ -61,9 +61,9 @@ def plot_roc_multi(fpr, tpr, roc_auc, num_class, cfg, classes_name):
 
 
 # Plot of a ROC curve for a specific class
-def plot_roc(fpr, tpr, roc_auc, num_class, cfg, classes_name):
+def plot_roc(fpr, tpr, roc_auc, num_class, cfg, classes_name, current_epoch):
     # Outdir
-    outdir = os.path.join(cfg.checkpoint_dir, 'plot_roc', 'epoch_' + str(cfg.run.current_epoch))
+    outdir = os.path.join(cfg.checkpoint_dir, 'plot_roc', 'epoch_' + str(current_epoch))
     os.makedirs(outdir, exist_ok=True)
 
     plt.figure()

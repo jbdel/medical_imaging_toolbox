@@ -9,8 +9,8 @@ report:
 experiment:
     name: doc2vec_mimic_mit
     output_dir: linguistics/embeddings/output/
-    save_vectors: True
+    save_vectors: False
     do_split:
-        - val
-        - test
+#        - val
+#        - test
         - train

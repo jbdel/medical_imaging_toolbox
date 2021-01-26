@@ -1,3 +1,5 @@
+import os
+import pickle
 import numpy as np
 from .basemetric import BaseMetric
 from dataloaders import *
@@ -12,14 +14,14 @@ from sklearn.metrics import classification_report
 
 
 def get_vectors_labels(dset):
-    train_vectors = []
-    train_labels = []
-    # for i in tqdm(range(len(train_dset))):
-    for i in tqdm(range(500)):
+    vectors = []
+    labels = []
+    for i in tqdm(range(len(dset))):
+    # for i in tqdm(range(500)):
         sample = dset.__getitem__(i)
-        train_vectors.append(sample["vector"])
-        train_labels.append(sample["label"])
-    return np.array(train_vectors), np.array(train_labels)
+        vectors.append(sample["vector"])
+        labels.append(sample["label"])
+    return np.array(vectors), np.array(labels)
 
 
 def argsort(x, topn=None, reverse=False):
@@ -52,14 +54,21 @@ class HiddenStratMetric(BaseMetric):
             raise NotImplementedError(self.decision_function)
 
         # Train vectors and train labels for 'all' task
-        print('HiddenStratMetric: Building list of reports (only once)')
         dataset_params = copy.deepcopy(cfg.dataset_params)
         OmegaConf.update(dataset_params, 'task', 'all', merge=False)
         train_dset = eval(self.cfg.dataset)('train', **dataset_params)
         val_dset = eval(self.cfg.dataset)('val', **dataset_params)
 
-        self.train_vectors, self.train_labels = get_vectors_labels(train_dset)
-        self.valid_vectors, self.valid_labels = get_vectors_labels(val_dset)
+        report_pkl_path = os.path.join(train_dset.data_root, "hidden_strat.pkl")
+        if not os.path.exists(report_pkl_path):
+            print('HiddenStratMetric: Building list of reports (only once)')
+            train_vectors, train_labels = get_vectors_labels(train_dset)
+            valid_vectors, valid_labels = get_vectors_labels(val_dset)
+            pickle.dump((train_vectors, train_labels, valid_vectors, valid_labels),
+                        open(report_pkl_path, "wb"))
+
+        self.train_vectors, self.train_labels, self.valid_vectors, self.valid_labels = pickle.load(
+            open(report_pkl_path, "rb"))
 
         # Get 'all' info
         self.all_classes = np.array(val_dset.get_all_class_names_ordered())
@@ -86,11 +95,12 @@ class HiddenStratMetric(BaseMetric):
         y_pred = self.pred_fn(input['label'])
         y_true = self.pred_fn(target['label'])
         correct = np.where(count_nonzero(csr_matrix(y_true) - csr_matrix(y_pred), axis=1) == 0)
+        correct = correct[0]
 
         y_true_all = []
         y_pred_all = []
         # For each right prediction...
-        for index in correct:
+        for index in range(len(y_pred)):
             # Get top 10 train neighbors
             vector = target['vector'][index]
             dists = np.dot(self.train_vectors, np.squeeze(vector))

@@ -7,10 +7,11 @@ from torch.utils.data import Dataset
 class BaseDataset(Dataset):
     __metaclass__ = abc.ABC
 
-    def __init__(self, task='all'):
+    def __init__(self, task='all', data_root="./dataset/"):
         super().__init__()
         assert task in self.get_tasks(), 'task {} unknown'.format(task)
         self.task = task
+        self.data_root = data_root
 
         self.task_classes = list(self.get_classes())
         self.num_classes = len(self.task_classes)

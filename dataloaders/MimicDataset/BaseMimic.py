@@ -4,7 +4,9 @@ from dataloaders.BaseDataset import BaseDataset
 
 class BaseMimic(BaseDataset):
     def __init__(self, task):
-        super().__init__(task)
+        super().__init__(task, data_root='./data/mimic-crx/')
+        self.ann_file = 'annotations.json'
+        self.image_root = 'images'
 
     @staticmethod
     def get_all_class_names_ordered():
