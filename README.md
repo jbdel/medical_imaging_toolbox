@@ -107,13 +107,18 @@ python -m classifier.main --config classifier/configs/cnn_constrained.yml
 ```
 (make sure that `vector_file` is set to the right path in the config file)
 
-#TODO
+# Current TODO
 
-- Benchmark a baseline
 - Improve embeddings
-- Implement embeddings eval (of some sort)
-- retrain R2Gen
-- Incorporate VisualBert
-- Implement 'find nearest report' at test time
+- Integrate IU dataset
 - Implement GDRO
-- Publish a paper and get rich$$
+- Publish a paper and get rich $$
+
+# Long-term TODO
+
+- Incorporate VisualBert
+
+# Deadlines
+
+- EMNLP - May 10
+- NeurIps - May 20
